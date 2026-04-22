@@ -1,0 +1,5 @@
+
+# Configurazione per Firebase App Hosting (Supporto nativo Next.js con Server Actions)
+runConfig:
+  maxInstances: 2
+  memory: 512Mi

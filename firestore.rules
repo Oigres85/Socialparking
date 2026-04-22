@@ -1,0 +1,69 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Funzioni helper per la sicurezza
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    function isFieldImmutable(field) {
+      return !(field in request.resource.data) || request.resource.data[field] == resource.data[field];
+    }
+    
+    function isValidLat(lat) {
+      return lat >= -90 && lat <= 90;
+    }
+    
+    function isValidLon(lon) {
+      return lon >= -180 && lon <= 180;
+    }
+
+    // --- COLLECTION USERS ---
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false; // Disabilitato il listing degli utenti per privacy
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) && isFieldImmutable('id');
+      allow delete: if isOwner(userId);
+    }
+
+    // --- COLLECTION PARKINGS ---
+    match /parkings/{parkingId} {
+      allow get, list: if isSignedIn();
+      
+      // Creazione: status deve essere 'libero' e coordinate valide
+      allow create: if isSignedIn() && 
+                      request.resource.data.userId == request.auth.uid &&
+                      request.resource.data.status == 'libero' &&
+                      isValidLat(request.resource.data.latitude) &&
+                      isValidLon(request.resource.data.longitude);
+      
+      // Update: userId immutabile, owner può solo cambiare stato/timestamp
+      allow update: if isSignedIn() && isFieldImmutable('userId') && (
+                      (
+                        isOwner(resource.data.userId) && 
+                        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'timestamp', 'stats'])
+                      ) || 
+                      (
+                        // Logica di Prenotazione
+                        resource.data.status == 'libero' &&
+                        request.resource.data.status == 'in arrivo' &&
+                        request.resource.data.reservedById == request.auth.uid
+                      ) ||
+                      (
+                        // Logica di Cancellazione
+                        resource.data.status == 'in arrivo' &&
+                        isOwner(resource.data.reservedById) &&
+                        request.resource.data.status == 'libero'
+                      )
+                    );
+                    
+      allow delete: if resource != null && isOwner(resource.data.userId);
+    }
+  }
+}

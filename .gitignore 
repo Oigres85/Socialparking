@@ -1,0 +1,6 @@
+node_modules
+.next
+out
+*.tar.gz
+ziw5vTuW
+.env.local
