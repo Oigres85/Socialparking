@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "studio-6366379090-251c5"
+  },
+  "targets": {
+    "studio-6366379090-251c5": {
+      "hosting": {
+        "social-park-alias": [
+          "social-parking"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

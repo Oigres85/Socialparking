@@ -1,0 +1,106 @@
+
+{
+  "entities": {
+    "Parking": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Parking",
+      "type": "object",
+      "description": "Represents a parking spot location and status.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "latitude": {
+          "type": "number"
+        },
+        "longitude": {
+          "type": "number"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "status": {
+          "type": "string"
+        },
+        "userId": {
+          "type": "string"
+        },
+        "bookingCode": {
+          "type": "string"
+        },
+        "reservedById": {
+          "type": "string"
+        },
+        "reservedByName": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "latitude",
+        "longitude",
+        "timestamp",
+        "status",
+        "userId"
+      ]
+    },
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user profile with push subscription and location.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string",
+          "format": "email"
+        },
+        "name": {
+          "type": "string"
+        },
+        "latitude": {
+          "type": "number"
+        },
+        "longitude": {
+          "type": "number"
+        },
+        "isSearching": {
+          "type": "boolean"
+        },
+        "currentBookingId": {
+          "type": "string"
+        },
+        "pushSubscription": {
+          "type": "object",
+          "description": "The Web Push subscription object."
+        },
+        "lastLocationUpdate": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles. Owners can read/write."
+    },
+    "/parkings/{parkingId}": {
+      "schema": "Parking",
+      "description": "Public parking spots."
+    }
+  }
+}

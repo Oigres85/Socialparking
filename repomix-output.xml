@@ -1,0 +1,4448 @@
+This file is a merged representation of a subset of the codebase, containing files not matching ignore patterns, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of a subset of the repository's contents that is considered the most important context.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching these patterns are excluded: node_modules, .git, .firebase, .next, dist, package-lock.json, ziw5vTuW
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+.idx/
+  dev.nix
+  icon.png
+  mcp.json
+docs/
+  backend.json
+  blueprint.md
+public/
+  firebase-messaging-sw.js
+  icon-192.png
+  icon-512.png
+  icon-p.svg
+  index.html
+  manifest.json
+  og-image.png
+  sw.js
+scripts/
+  generate-icons.mjs
+src/
+  ai/
+    flows/
+      notify-booker-cancellation-flow.ts
+      notify-nearby-flow.ts
+    dev.ts
+    genkit.ts
+  app/
+    come-funziona/
+      page.tsx
+    globals.css
+    layout.tsx
+    not-found.tsx
+    page.tsx
+  components/
+    ui/
+      alert-dialog.tsx
+      button.tsx
+      card.tsx
+      input.tsx
+      label.tsx
+      progress.tsx
+      switch.tsx
+      toast.tsx
+      toaster.tsx
+      use-toast.ts
+    IOSInstallPrompt.tsx
+    Map.tsx
+    ServiceWorkerSetup.tsx
+  firebase/
+    auth/
+      use-user.tsx
+    firestore/
+      use-collection.tsx
+      use-doc.tsx
+    client-provider.tsx
+    config.ts
+    error-emitter.ts
+    errors.ts
+    index.ts
+    non-blocking-updates.ts
+    provider.tsx
+  hooks/
+    use-audio.tsx
+    use-gps.ts
+    use-push-subscription.ts
+  lib/
+    analytics.ts
+    constants.ts
+    utils.ts
+.firebaserc
+.gitignore
+.modified
+apphosting.yaml
+components.json
+firebase.json
+firestore.rules
+next.config.ts
+package.json
+postcss.config.mjs
+README.md
+tailwind.config.ts
+tsconfig.json
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path=".idx/dev.nix">
+# To learn more about how to use Nix to configure your environment
+# see: https://firebase.google.com/docs/studio/customize-workspace
+{pkgs}: {
+  # Which nixpkgs channel to use.
+  channel = "stable-24.11"; # or "unstable"
+  # Use https://search.nixos.org/packages to find packages
+  packages = [
+    pkgs.nodejs_20
+    pkgs.zulu
+  ];
+  # Sets environment variables in the workspace
+  env = {};
+  # This adds a file watcher to startup the firebase emulators. The emulators will only start if
+  # a firebase.json file is written into the user's directory
+  services.firebase.emulators = {
+    # Disabling because we are using prod backends right now
+    detect = false;
+    projectId = "demo-app";
+    services = ["auth" "firestore"];
+  };
+  idx = {
+    # Search for the extensions you want on https://open-vsx.org/ and use "publisher.id"
+    extensions = [
+      # "vscodevim.vim"
+    ];
+    workspace = {
+      onCreate = {
+        default.openFiles = [
+          "src/app/page.tsx"
+        ];
+      };
+    };
+    # Enable previews and customize configuration
+    previews = {
+      enable = true;
+      previews = {
+        web = {
+          command = ["npm" "run" "dev" "--" "--port" "$PORT" "--hostname" "0.0.0.0"];
+          manager = "web";
+        };
+      };
+    };
+  };
+}
+</file>
+
+<file path=".idx/mcp.json">
+{
+  "mcpServers": {}
+}
+</file>
+
+<file path="docs/backend.json">
+{
+  "entities": {
+    "Parking": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Parking",
+      "type": "object",
+      "description": "Represents a parking spot location and status.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "latitude": {
+          "type": "number"
+        },
+        "longitude": {
+          "type": "number"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "status": {
+          "type": "string"
+        },
+        "userId": {
+          "type": "string"
+        },
+        "bookingCode": {
+          "type": "string"
+        },
+        "reservedById": {
+          "type": "string"
+        },
+        "reservedByName": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "latitude",
+        "longitude",
+        "timestamp",
+        "status",
+        "userId"
+      ]
+    },
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user profile with push subscription and location.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string",
+          "format": "email"
+        },
+        "name": {
+          "type": "string"
+        },
+        "latitude": {
+          "type": "number"
+        },
+        "longitude": {
+          "type": "number"
+        },
+        "isSearching": {
+          "type": "boolean"
+        },
+        "currentBookingId": {
+          "type": "string"
+        },
+        "pushSubscription": {
+          "type": "object",
+          "description": "The Web Push subscription object."
+        },
+        "lastLocationUpdate": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles. Owners can read/write."
+    },
+    "/parkings/{parkingId}": {
+      "schema": "Parking",
+      "description": "Public parking spots."
+    }
+  }
+}
+</file>
+
+<file path="docs/blueprint.md">
+# **App Name**: Social Parking Italia
+
+## Core Features:
+
+- Splash Screen with GPS Activation: Initial screen with a 'ATTIVA MONITORAGGIO' button to enable GPS on iOS Safari.
+- Real-time GPS Monitoring: Tracks user speed and location to determine parking status.
+- Parking Status Logic: Detects when the user has parked (speed drops to 0 for 60s) and when they move more than 50m away from the parking spot.
+- Map Integration: Uses flutter_map with Mapbox token to display the user's location.
+- Firebase Integration: Connects to Cloud Firestore to save parking locations.
+- Parking Data Storage: Saves parking location (GeoPoint), timestamp, and status ('libero') to the 'parkings' collection in Firestore using the saveParking function.
+- PWA Optimization: Configures the app as a Progressive Web App (PWA) with proper meta-tags and manifest.json setup.
+
+## Style Guidelines:
+
+- Background color: Dark theme with #0D0D0D for the background.
+- Text color: White text for readability on the dark background.
+- Accent color: Neon/Electric Green (#39FF14) for highlights and primary interactive elements to convey a modern and high-tech aesthetic. The vividness is attention-grabbing on the dark background.
+- Font: 'Inter' (sans-serif) for both headlines and body text, providing a modern, readable interface.
+- Minimalist icons representing parking and location.
+- Clean and intuitive layout for easy navigation and usability.
+- Subtle animations for user interactions, such as GPS activation and parking status updates.
+</file>
+
+<file path="public/firebase-messaging-sw.js">
+importScripts('https://www.gstatic.com/firebasejs/9.1.1/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/9.1.1/firebase-messaging-compat.js');
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCcaJI-Ab6wKbk8_C9BckHf5JXblK8aLQs",
+  authDomain: "studio-6366379090-251c5.firebaseapp.com",
+  projectId: "studio-6366379090-251c5",
+  storageBucket: "studio-6366379090-251c5.firebasestorage.app",
+  messagingSenderId: "898470092455",
+  appId: "1:898470092455:web:8a65404f01381d2d660582"
+};
+
+firebase.initializeApp(firebaseConfig);
+const messaging = firebase.messaging();
+
+messaging.onBackgroundMessage((payload) => {
+  const notificationTitle = payload.notification.title;
+  const notificationOptions = {
+    body: payload.notification.body,
+    icon: '/icon-p.svg'
+  };
+
+  self.registration.showNotification(notificationTitle, notificationOptions);
+});
+</file>
+
+<file path="public/icon-p.svg">
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="100" fill="black"/>
+  <rect x="156" y="100" width="200" height="312" rx="40" stroke="#F97316" stroke-width="40"/>
+  <path d="M156 220H356" stroke="#F97316" stroke-width="40"/>
+  <text x="256" y="320" font-family="Arial" font-size="200" font-weight="bold" fill="white" text-anchor="middle">P</text>
+</svg>
+</file>
+
+<file path="public/index.html">
+<!-- Questo file è stato svuotato per permettere a Next.js di gestire la root dell'applicazione senza conflitti con la pagina Welcome di Firebase -->
+</file>
+
+<file path="public/manifest.json">
+{
+  "name": "Social Parking",
+  "short_name": "Social Parking",
+  "description": "Trova e condividi parcheggi in tempo reale. Gratuito, anonimo, immediato.",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "start_url": "/?source=pwa",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "orientation": "portrait",
+  "categories": ["navigation", "utilities"],
+  "lang": "it"
+}
+</file>
+
+<file path="public/sw.js">
+/**
+ * Service Worker per Social Parking Italia.
+ * Gestisce le notifiche Push in background su iOS (Web Push) e Android.
+ *
+ * NOTA iOS: le push notifications su iOS richiedono:
+ * 1. App installata come PWA (aggiunta alla schermata Home)
+ * 2. iOS 16.4+
+ * 3. Permesso notifiche concesso dall'utente
+ * 4. Icone PNG valide nel manifest.json (non SVG)
+ */
+
+self.addEventListener('install', (event) => {
+  // Attivazione immediata senza attendere la chiusura delle tab esistenti
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(self.clients.claim());
+});
+
+self.addEventListener('push', function(event) {
+  if (!event.data) return;
+
+  try {
+    const data = event.data.json();
+    const options = {
+      body: data.body,
+      icon: data.icon || '/icon-192.png',  // PNG per iOS
+      badge: '/icon-192.png',              // PNG per iOS
+      tag: data.tag || 'parking-alert',
+      data: data.url || '/',
+      vibrate: [200, 100, 200],
+      renotify: true,                      // Mostra anche se tag uguale
+    };
+
+    event.waitUntil(
+      self.registration.showNotification(data.title, options)
+    );
+  } catch (e) {
+    // Fallback per payload non-JSON
+    const text = event.data.text();
+    event.waitUntil(
+      self.registration.showNotification('Social Parking', { body: text, icon: '/icon-192.png' })
+    );
+  }
+});
+
+self.addEventListener('notificationclick', function(event) {
+  event.notification.close();
+  const targetUrl = event.notification.data || '/';
+
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
+      // Se l'app è già aperta, portala in foreground
+      for (const client of windowClients) {
+        if ('focus' in client) {
+          client.focus();
+          return;
+        }
+      }
+      // Altrimenti apri una nuova finestra
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(targetUrl);
+      }
+    })
+  );
+});
+
+/**
+ * pushsubscriptionchange: fired quando iOS/browser rinnova la subscription.
+ * Invia la nuova subscription al server per aggiornarla su Firestore.
+ */
+self.addEventListener('pushsubscriptionchange', function(event) {
+  event.waitUntil(
+    self.registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: event.oldSubscription?.options?.applicationServerKey,
+    }).then(subscription => {
+      // Notifica il client principale di aggiornare Firestore
+      return self.clients.matchAll({ type: 'window' }).then(clients => {
+        clients.forEach(client => {
+          client.postMessage({
+            type: 'PUSH_SUBSCRIPTION_RENEWED',
+            subscription: subscription.toJSON()
+          });
+        });
+      });
+    }).catch(err => console.error('[SW] pushsubscriptionchange error:', err))
+  );
+});
+</file>
+
+<file path="scripts/generate-icons.mjs">
+import sharp from 'sharp';
+import { existsSync, mkdirSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const publicDir = join(__dirname, '..', 'public');
+const inputSvg = join(publicDir, 'icon-p.svg');
+
+if (!existsSync(publicDir)) {
+  mkdirSync(publicDir, { recursive: true });
+}
+
+const icons = [
+  { name: 'icon-192.png', size: 192 },
+  { name: 'icon-512.png', size: 512 },
+];
+
+async function generateIcons() {
+  try {
+    console.log('🚀 Avvio generazione icone...');
+
+    // Generazione icone PWA
+    for (const icon of icons) {
+      await sharp(inputSvg)
+        .resize(icon.size, icon.size)
+        .png()
+        .toFile(join(publicDir, icon.name));
+      console.log(`✅ Generata: ${icon.name}`);
+    }
+
+    // Generazione og-image.png (1200x630)
+    console.log('🚀 Generazione og-image.png...');
+    await sharp({
+      create: { 
+        width: 1200, 
+        height: 630, 
+        channels: 4, 
+        background: { r: 0, g: 0, b: 0, alpha: 1 } 
+      }
+    })
+    .composite([{
+      input: Buffer.from(`<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+        <rect width="160" height="160" x="520" y="120" rx="32" fill="#2563eb"/>
+        <text x="600" y="235" text-anchor="middle" font-size="120" font-weight="900" fill="white" font-family="Arial">P</text>
+        <text x="600" y="360" text-anchor="middle" font-size="64" font-weight="900" fill="white" font-family="Arial">Social Parking</text>
+        <text x="600" y="440" text-anchor="middle" font-size="32" font-weight="400" fill="#9ca3af" font-family="Arial">Trova parcheggio in tempo reale</text>
+      </svg>`),
+      top: 0, 
+      left: 0
+    }])
+    .png()
+    .toFile(join(publicDir, 'og-image.png'));
+    
+    console.log('✅ Generata: og-image.png');
+    console.log('✨ Tutte le immagini sono state generate con successo!');
+  } catch (err) {
+    console.error('❌ Errore durante la generazione delle icone:', err);
+    process.exit(1);
+  }
+}
+
+generateIcons();
+</file>
+
+<file path="src/ai/flows/notify-booker-cancellation-flow.ts">
+'use server';
+/**
+ * @fileOverview Flusso Genkit per inviare notifiche push al prenotante quando il proprietario annulla.
+ */
+
+import { ai } from '../genkit';
+import { z } from 'genkit';
+import webpush from 'web-push';
+import { initializeApp, getApps } from 'firebase/app';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import { firebaseConfig, VAPID_PUBLIC_KEY } from '../../firebase/config';
+
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+const db = getFirestore(app);
+
+// Configurazione VAPID sicura
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
+
+if (VAPID_PRIVATE_KEY) {
+  try {
+    webpush.setVapidDetails(
+      'mailto:info@socialparking.it',
+      VAPID_PUBLIC_KEY,
+      VAPID_PRIVATE_KEY
+    );
+  } catch (error) {
+    console.warn('VAPID_PRIVATE_KEY non valida o non correttamente codificata in Base64 (deve essere di 32 byte).');
+  }
+}
+
+const NotifyBookerCancellationInputSchema = z.object({
+  bookerId: z.string(),
+  spotId: z.string(),
+});
+
+export async function notifyBookerCancellation(input: z.infer<typeof NotifyBookerCancellationInputSchema>) {
+  return notifyBookerCancellationFlow(input);
+}
+
+const notifyBookerCancellationFlow = ai.defineFlow(
+  {
+    name: 'notifyBookerCancellationFlow',
+    inputSchema: NotifyBookerCancellationInputSchema,
+    outputSchema: z.object({ success: z.boolean() }),
+  },
+  async (input) => {
+    if (!VAPID_PRIVATE_KEY) {
+      console.warn('Impossibile inviare notifiche: VAPID_PRIVATE_KEY mancante.');
+      return { success: false };
+    }
+
+    try {
+      const userRef = doc(db, 'users', input.bookerId);
+      const userSnap = await getDoc(userRef);
+      
+      if (!userSnap.exists()) return { success: false };
+      
+      const userData = userSnap.data();
+      if (userData.pushSubscription) {
+        const payload = JSON.stringify({
+          title: "Prenotazione Annullata",
+          body: "L'utente non libera più il parcheggio. La tua prenotazione è stata rimossa.",
+          icon: '/icon-192.png',
+          badge: '/icon-192.png',
+          tag: 'booking-cancellation'
+        });
+
+        await webpush.sendNotification(userData.pushSubscription, payload, {
+          urgency: 'high',
+          TTL: 60
+        });
+        return { success: true };
+      }
+    } catch (error) {
+      console.error('Errore invio push cancellazione:', error);
+    }
+    return { success: false };
+  }
+);
+</file>
+
+<file path="src/ai/flows/notify-nearby-flow.ts">
+'use server';
+/**
+ * @fileOverview Flusso Genkit per inviare notifiche push agli utenti vicini.
+ */
+
+import { ai } from '../genkit';
+import { z } from 'genkit';
+import webpush from 'web-push';
+import { initializeApp, getApps } from 'firebase/app';
+import { getFirestore, collection, getDocs, query, where, Timestamp, doc, updateDoc, deleteField } from 'firebase/firestore';
+import { firebaseConfig, VAPID_PUBLIC_KEY } from '../../firebase/config';
+import { NOTIFY_RADIUS_M } from '../../lib/constants';
+
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+const db = getFirestore(app);
+
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
+
+if (VAPID_PRIVATE_KEY) {
+  try {
+    webpush.setVapidDetails(
+      'mailto:info@socialparking.it',
+      VAPID_PUBLIC_KEY,
+      VAPID_PRIVATE_KEY
+    );
+  } catch (error) {
+    console.warn('VAPID_PRIVATE_KEY non valida o non correttamente codificata in Base64.');
+  }
+}
+
+const NotifyNearbyInputSchema = z.object({
+  latitude: z.number(),
+  longitude: z.number(),
+  excludeUserId: z.string(),
+});
+
+export async function notifyNearby(input: z.infer<typeof NotifyNearbyInputSchema>) {
+  return notifyNearbyFlow(input);
+}
+
+const notifyNearbyFlow = ai.defineFlow(
+  {
+    name: 'notifyNearbyFlow',
+    inputSchema: NotifyNearbyInputSchema,
+    outputSchema: z.object({ sentCount: z.number() }),
+  },
+  async (input) => {
+    if (!VAPID_PRIVATE_KEY) {
+      console.warn('Impossibile inviare notifiche: VAPID_PRIVATE_KEY mancante.');
+      return { sentCount: 0 };
+    }
+
+    const twoHoursAgo = Timestamp.fromMillis(Date.now() - 2 * 60 * 60 * 1000);
+
+    const usersRef = collection(db, 'users');
+    const q = query(
+      usersRef,
+      where('isSearching', '==', true),
+      where('lastLocationUpdate', '>=', twoHoursAgo)
+    );
+    const querySnapshot = await getDocs(q);
+
+    let sentCount = 0;
+
+    const promises = querySnapshot.docs.map(async (userDoc) => {
+      const userData = userDoc.data();
+
+      if (userDoc.id === input.excludeUserId) return;
+
+      if (userData.latitude && userData.longitude) {
+        const distance = getDistance(
+          input.latitude,
+          input.longitude,
+          userData.latitude,
+          userData.longitude
+        );
+
+        if (distance <= NOTIFY_RADIUS_M && userData.pushSubscription) {
+          try {
+            const payload = JSON.stringify({
+              title: "Parcheggio Libero! 🅿️",
+              body: `Un posto è disponibile a ${Math.round(distance)}m da te`,
+              icon: '/icon-192.png',
+              badge: '/icon-192.png',
+              tag: 'parking-alert',
+              url: '/'
+            });
+
+            await webpush.sendNotification(userData.pushSubscription, payload, {
+              urgency: 'high',
+              TTL: 60
+            });
+            sentCount++;
+          } catch (error: any) {
+            // HTTP 410 Gone o 404 Not Found = subscription scaduta/non valida
+            // La eliminiamo da Firestore per non sprecare risorse nelle chiamate future
+            const statusCode = error?.statusCode || error?.status;
+            if (statusCode === 410 || statusCode === 404) {
+              try {
+                await updateDoc(doc(db, 'users', userDoc.id), {
+                  pushSubscription: deleteField(),
+                  isSearching: false, // Reset anche searching, non può più ricevere notifiche
+                });
+                console.log(`[Push] Subscription scaduta rimossa per utente: ${userDoc.id}`);
+              } catch (cleanupError) {
+                console.error('[Push] Errore cleanup subscription:', cleanupError);
+              }
+            } else {
+              console.error('[Push] Errore invio a', userDoc.id, '- status:', statusCode, error?.message);
+            }
+          }
+        }
+      }
+    });
+
+    await Promise.all(promises);
+    return { sentCount };
+  }
+);
+
+function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371e3;
+  const φ1 = (lat1 * Math.PI) / 180;
+  const φ2 = (lat2 * Math.PI) / 180;
+  const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+  const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+
+  const a =
+    Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c;
+}
+</file>
+
+<file path="src/ai/dev.ts">
+import { ai } from './genkit';
+
+// Esporta l'istanza per l'utilizzo con la CLI di Genkit durante lo sviluppo
+export default ai;
+</file>
+
+<file path="src/ai/genkit.ts">
+import { genkit } from 'genkit';
+import { googleAI } from '@genkit-ai/google-genai';
+
+/**
+ * Inizializzazione di Genkit con il plugin Google AI.
+ * Questo oggetto 'ai' viene utilizzato per definire flussi e prompt nell'applicazione.
+ */
+export const ai = genkit({
+  plugins: [googleAI()],
+});
+</file>
+
+<file path="src/app/come-funziona/page.tsx">
+'use client';
+
+/**
+ * @fileOverview Landing page ad alta conversione per utenti da link condivisi.
+ * Design premium, social proof e istruzioni chiare per massimizzare l'onboarding.
+ */
+
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+
+export default function ComeFunziona() {
+  const router = useRouter();
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const ua = window.navigator.userAgent;
+    setIsMobile(/iPhone|iPad|iPod|Android/i.test(ua));
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-black text-white flex flex-col items-center font-sans selection:bg-blue-500/30 overflow-x-hidden">
+      {/* Background Decorative Glows */}
+      <div className="fixed top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-600/10 blur-[120px] rounded-full pointer-events-none" />
+      <div className="fixed bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-orange-600/10 blur-[120px] rounded-full pointer-events-none" />
+
+      {/* Hero Section */}
+      <header className="relative w-full max-w-xl px-6 pt-16 pb-12 flex flex-col items-center text-center animate-in fade-in slide-in-from-top-8 duration-1000">
+        <div className="inline-flex items-center gap-2 bg-blue-600/10 border border-blue-500/20 px-4 py-2 rounded-full mb-8">
+          <span className="relative flex h-3 w-3">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+          </span>
+          <span className="text-blue-400 font-black text-[10px] uppercase tracking-widest">
+            1.247 parcheggi liberati questa settimana
+          </span>
+        </div>
+
+        <div className="relative mb-8">
+          <div className="absolute inset-0 bg-blue-600 blur-3xl opacity-20 rounded-full" />
+          <div className="relative bg-blue-600 w-28 h-28 rounded-[2.5rem] flex items-center justify-center shadow-[0_0_50px_rgba(37,99,235,0.4)] border-4 border-white/10">
+            <span className="text-7xl font-black text-white leading-none">P</span>
+          </div>
+        </div>
+
+        <h1 className="text-5xl font-black tracking-tighter leading-[0.9] mb-4">
+          Trova parcheggio <br />
+          <span className="text-blue-500">in tempo reale</span>
+        </h1>
+        <p className="text-lg text-white/50 font-bold max-w-xs leading-tight">
+          La community italiana che condivide i posti liberi. <span className="text-white">Gratis.</span>
+        </p>
+      </header>
+
+      {/* Steps Section */}
+      <main className="w-full max-w-md px-6 space-y-6 mb-16 relative z-10">
+        {[
+          {
+            num: "1",
+            emoji: "🚗",
+            title: "Qualcuno sta uscendo",
+            desc: "Premi LIBERA PARCHEGGIO e avvisa chi sta cercando in zona."
+          },
+          {
+            num: "2",
+            emoji: "🔍",
+            title: "Notifica Istantanea",
+            desc: "Ricevi un avviso sul telefono appena si libera un posto vicino a te."
+          },
+          {
+            num: "3",
+            emoji: "✅",
+            title: "Prenota con un tap",
+            desc: "Assicurati il posto e scambia il codice di 4 lettere con chi esce."
+          }
+        ].map((step, i) => (
+          <div 
+            key={i}
+            className="group bg-white/5 border border-white/10 p-6 rounded-[2.5rem] flex items-start gap-5 hover:bg-white/[0.07] transition-colors duration-500 animate-in fade-in slide-in-from-bottom-8"
+            style={{ animationDelay: `${(i + 1) * 150}ms` }}
+          >
+            <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center font-black text-xl text-blue-500 group-hover:scale-110 transition-transform">
+              {step.num}
+            </div>
+            <div>
+              <h3 className="font-black text-xl uppercase tracking-tighter leading-none mb-2">
+                {step.title}
+              </h3>
+              <p className="text-white/60 text-sm font-medium leading-tight">
+                {step.desc}
+              </p>
+            </div>
+          </div>
+        ))}
+      </main>
+
+      {/* Social Proof Bar */}
+      <section className="w-full max-w-md px-6 mb-20 animate-in fade-in duration-1000 delay-700">
+        <div className="grid grid-cols-3 gap-1 py-6 border-y border-white/10">
+          <div className="text-center">
+            <p className="text-xl font-black text-white">0€</p>
+            <p className="text-[9px] font-black text-white/30 uppercase tracking-widest">Costo</p>
+          </div>
+          <div className="text-center border-x border-white/10 px-2">
+            <p className="text-xl font-black text-white">&lt; 60s</p>
+            <p className="text-[9px] font-black text-white/30 uppercase tracking-widest">Tempo Medio</p>
+          </div>
+          <div className="text-center">
+            <p className="text-xl font-black text-white">PWA</p>
+            <p className="text-[9px] font-black text-white/30 uppercase tracking-widest">iOS & Android</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer CTA */}
+      <div className="w-full max-w-xs pb-16 flex flex-col items-center mt-auto">
+        <button
+          onClick={() => router.push('/')}
+          className="w-full bg-white text-black font-black text-xl h-16 rounded-full shadow-[0_20px_40px_rgba(255,255,255,0.15)] hover:bg-white/90 active:scale-95 transition-all uppercase tracking-widest mb-4"
+        >
+          APRI LA MAPPA →
+        </button>
+        <p className="text-[11px] text-white/40 font-black uppercase tracking-widest mb-8">
+          Nessuna registrazione. Funziona subito.
+        </p>
+
+        {isMobile && (
+          <div className="bg-orange-500/10 border border-orange-500/20 p-4 rounded-2xl flex items-center gap-3 animate-pulse">
+            <span className="text-2xl">📲</span>
+            <p className="text-[10px] text-orange-400 font-black uppercase leading-tight tracking-wide">
+              Aggiungi alla schermata Home <br />
+              <span className="text-white/60">per le notifiche push</span>
+            </p>
+          </div>
+        )}
+
+        <footer className="mt-12 text-center">
+          <p className="text-[10px] text-white/20 font-black uppercase tracking-[0.3em]">
+            Gratuito · Anonimo · Immediato
+          </p>
+        </footer>
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="src/app/globals.css">
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Nasconde completamente i contenitori e i loghi di Mapbox per un look pulito */
+.mapboxgl-ctrl-bottom-left,
+.mapboxgl-ctrl-bottom-right,
+.mapboxgl-ctrl-logo, 
+.mapboxgl-ctrl-attrib {
+  display: none !important;
+}
+
+.mapboxgl-ctrl-compass {
+  display: none;
+}
+
+@layer base {
+  :root {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+
+    --radius: 0.5rem;
+    
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+
+    --sidebar-background: 222.2 84% 4.9%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 210 40% 98%;
+    --sidebar-primary-foreground: 222.2 47.4% 11.2%;
+    --sidebar-accent: 217.2 32.6% 17.5%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217.2 32.6% 17.5%;
+    --sidebar-ring: 212.7 26.8% 83.9%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+</file>
+
+<file path="src/app/layout.tsx">
+import type { Metadata, Viewport } from 'next';
+import { Inter } from 'next/font/google';
+import 'mapbox-gl/dist/mapbox-gl.css';
+import './globals.css';
+import { FirebaseClientProvider } from '@/firebase/client-provider';
+import { Toaster } from '@/components/ui/toaster';
+import { AudioProvider } from '@/hooks/use-audio';
+import ServiceWorkerSetup from '@/components/ServiceWorkerSetup';
+import IOSInstallPrompt from '@/components/IOSInstallPrompt';
+
+const inter = Inter({ subsets: ['latin'] });
+
+export const viewport: Viewport = {
+  themeColor: '#000000',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
+};
+
+export const metadata: Metadata = {
+  title: 'Social Parking – Trova parcheggio in tempo reale',
+  description: 'La community italiana che condivide i parcheggi liberi. Gratuito, anonimo, immediato. Scarica la PWA e inizia subito.',
+  manifest: '/manifest.json',
+  openGraph: {
+    type: 'website',
+    url: 'https://www.siigep.tech',
+    title: '🅿️ Social Parking – Parcheggio Libero!',
+    description: 'Trova un parcheggio libero in tempo reale grazie alla community. Gratuito e anonimo.',
+    siteName: 'Social Parking',
+    images: [
+      {
+        url: 'https://www.siigep.tech/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Social Parking – Trova parcheggio in tempo reale',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: '🅿️ Social Parking',
+    description: 'Trova parcheggio libero in tempo reale grazie alla community italiana.',
+    images: ['https://www.siigep.tech/og-image.png'],
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Social Parking',
+  },
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="it">
+      <head>
+        <link rel="icon" href="/icon-p.svg" type="image/svg+xml" />
+        {/* FIX: apple-touch-icon deve essere PNG, non SVG – iOS ignora gli SVG */}
+        <link rel="apple-touch-icon" href="/icon-192.png" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-title" content="Social Parking" />
+        <link rel="manifest" href="/manifest.json" />
+      </head>
+      <body className={inter.className}>
+        <FirebaseClientProvider>
+          <AudioProvider>
+            <ServiceWorkerSetup />
+            {children}
+            <Toaster />
+            <IOSInstallPrompt />
+          </AudioProvider>
+        </FirebaseClientProvider>
+      </body>
+    </html>
+  );
+}
+</file>
+
+<file path="src/app/not-found.tsx">
+'use client';
+
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+
+export default function NotFound() {
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background text-foreground">
+      <h1 className="text-6xl font-bold">404</h1>
+      <h2 className="mb-2 mt-4 text-2xl">Pagina non trovata</h2>
+      <p className="mb-6 text-muted-foreground">
+        Spiacenti, non siamo riusciti a trovare la pagina che stai cercando.
+      </p>
+      <Button asChild>
+        <Link href="/">Torna alla Home</Link>
+      </Button>
+    </div>
+  );
+}
+</file>
+
+<file path="src/app/page.tsx">
+'use client';
+
+/**
+ * @fileOverview Pagina principale Social Parking Italia - Versione 6.3 Stable.
+ * Ottimizzata per prevenire errori di idratazione e cicli di render.
+ */
+
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import dynamic from 'next/dynamic';
+import { signInAnonymously } from 'firebase/auth';
+import { collection, increment } from 'firebase/firestore';
+
+import { useAuth, useFirestore } from '@/firebase/provider';
+import { useCollection } from '@/firebase/firestore/use-collection';
+import { useDoc } from '@/firebase/firestore/use-doc';
+import { useUser } from '@/firebase/auth/use-user';
+import {
+  updateDocumentNonBlocking,
+  addDocumentNonBlocking,
+  deleteDocumentNonBlocking,
+  serverTimestamp,
+} from '@/firebase/non-blocking-updates';
+import { notifyNearby } from '@/ai/flows/notify-nearby-flow';
+
+import { getHaversineDistance, generateBookingCode } from '@/lib/utils';
+import {
+  PARKING_EXPIRY_MS,
+  PARKING_EXPIRY_SECS,
+  NOTIFY_THROTTLE_MS,
+  NEARBY_SEARCH_RADIUS_M,
+} from '@/lib/constants';
+
+import { useGps } from '@/hooks/use-gps';
+import { usePushSubscription } from '@/hooks/use-push-subscription';
+import { Analytics } from '@/lib/analytics';
+import { useAudio } from '@/hooks/use-audio';
+import { cn } from "@/lib/utils";
+
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Crosshair, Clock, CheckCircle2, Maximize2, Share2, Bell, X, Loader2 } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
+import type { MapRef } from 'react-map-gl';
+
+const Map = dynamic(() => import('@/components/Map'), {
+  ssr: false,
+  loading: () => <div className="h-screen w-screen animate-pulse bg-slate-900" />,
+});
+
+const translations = {
+  it: {
+    unpark: "Libera parcheggio",
+    searchTitle: "Ricerca parcheggi",
+    parkingFreed: "Parcheggio liberato",
+    bookingCancelled: "Prenotazione annullata",
+    spotUnavailable: "IL PARCHEGGIO NON È PIÙ DISPONIBILE",
+    noParking: "Nessun parcheggio disponibile",
+    freeSpot: "Parcheggio libero",
+    book: "Prenota",
+    matchCodeLabel: "Codice prenotazione",
+    matchCodeTitle: "CODICE PRENOTAZIONE",
+    getDirections: "OTTIENI INDICAZIONI",
+    cancelBooking: "ANNULLA PRENOTAZIONE",
+    cancelShort: "ANNULLA",
+    waitUser: "Attendi utente con codice",
+    waitingForBooking: "In attesa di prenotazione",
+    spotBooked: "Parcheggio Prenotato!",
+    cancelFreeing: "Annulla segnalazione",
+    residueTime: "TEMPO RESIDUO",
+    navActive: "NAVIGAZIONE ATTIVA",
+    share: "Condividi",
+    todayFreed: "Parcheggi liberati oggi",
+    notifNudge: "🔔 Vuoi essere avvisato quando si libera un posto vicino a te?",
+    notifYes: "SÌ, ATTIVA",
+    notifLater: "Dopo",
+    personalStats: "Il tuo contributo",
+    newHero: "Inizia ad aiutare la community! 🅿️",
+    veteranHero: "Hai già aiutato {count} persone! 🏆"
+  },
+  en: {
+    unpark: "Free parking",
+    searchTitle: "Search for parking",
+    parkingFreed: "Parking freed",
+    bookingCancelled: "Booking cancelled",
+    spotUnavailable: "PARKING NO LONGER AVAILABLE",
+    noParking: "No parking available",
+    freeSpot: "Free parking",
+    book: "Book",
+    matchCodeLabel: "Booking code",
+    matchCodeTitle: "BOOKING CODE",
+    getDirections: "GET DIRECTIONS",
+    cancelBooking: "CANCEL BOOKING",
+    cancelShort: "CANCEL",
+    waitUser: "Wait for user with code",
+    waitingForBooking: "Waiting for booking",
+    spotBooked: "Parking Booked!",
+    cancelFreeing: "Cancel alert",
+    residueTime: "TIME LEFT",
+    navActive: "ACTIVE NAVIGATION",
+    share: "Share",
+    todayFreed: "Parkings freed today",
+    notifNudge: "🔔 Want to be notified when a spot opens up near you?",
+    notifYes: "YES, ACTIVATE",
+    notifLater: "Later",
+    personalStats: "Your contribution",
+    newHero: "Start helping the community! 🅿️",
+    veteranHero: "You helped {count} people! 🏆"
+  }
+};
+
+const ItalyFlag = ({ onClick }: { onClick: () => void }) => (
+  <svg width="24" height="18" viewBox="0 0 3 2" className="cursor-pointer shadow-sm rounded-sm" onClick={onClick}>
+    <rect width="1" height="2" fill="#009246" />
+    <rect width="1" height="2" x="1" fill="#fff" />
+    <rect width="1" height="2" x="2" fill="#ce2b37" />
+  </svg>
+);
+
+const UKFlag = ({ onClick }: { onClick: () => void }) => (
+  <svg width="24" height="18" viewBox="0 0 60 30" className="cursor-pointer shadow-sm rounded-sm" onClick={onClick}>
+    <path d="M0,0 v30 h60 v-30 z" fill="#012169" />
+    <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" strokeWidth="6" />
+    <path d="M0,0 L60,30 M60,0 L0,30" stroke="#C8102E" strokeWidth="4" />
+    <path d="M30,0 v30 M0,15 h60" stroke="#fff" strokeWidth="10" />
+    <path d="M30,0 v30" stroke="#C8102E" strokeWidth="6" />
+  </svg>
+);
+
+const OnboardingScreen = ({ onFinish }: { onFinish: () => void }) => (
+  <div className="fixed inset-0 z-[999] bg-black flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-500 overflow-y-auto">
+    <div className="mb-8 relative">
+      <div className="absolute inset-0 bg-blue-500/20 blur-3xl rounded-full" />
+      <div className="relative bg-blue-600 w-24 h-24 rounded-3xl flex items-center justify-center shadow-2xl border-4 border-white/20">
+        <span className="text-6xl font-black text-white leading-none">P</span>
+      </div>
+    </div>
+    
+    <h1 className="text-4xl font-black text-white mb-2 tracking-tighter">Social Parking</h1>
+    <p className="text-lg text-white/60 font-bold mb-12 leading-tight">Libera il tuo posto.<br/>Trova un posto libero.</p>
+    
+    <div className="space-y-6 text-left w-full max-w-xs mb-16">
+      <div className="flex items-start gap-4">
+        <span className="text-3xl" role="img" aria-label="car">🚗</span>
+        <div>
+          <p className="text-white font-black text-sm uppercase tracking-wide none">Stai lasciando?</p>
+          <p className="text-white/50 text-xs font-bold mt-1">Premi LIBERA PARCHEGGIO</p>
+        </div>
+      </div>
+      <div className="flex items-start gap-4">
+        <span className="text-3xl" role="img" aria-label="search">🔍</span>
+        <div>
+          <p className="text-white font-black text-sm uppercase tracking-wide leading-none">Stai cercando?</p>
+          <p className="text-white/50 text-xs font-bold mt-1">Attiva la RICERCA</p>
+        </div>
+      </div>
+      <div className="flex items-start gap-4">
+        <span className="text-3xl" role="img" aria-label="check">✅</span>
+        <div>
+          <p className="text-white font-black text-sm uppercase tracking-wide leading-none">Prenota con un tap</p>
+          <p className="text-white/50 text-xs font-bold mt-1">Scambia il codice.</p>
+        </div>
+      </div>
+    </div>
+    
+    <button 
+      onClick={onFinish}
+      className="w-full max-w-xs bg-white text-black hover:bg-white/90 active:scale-95 transition-all h-16 rounded-full font-black text-xl uppercase tracking-widest shadow-2xl shadow-white/10 shrink-0"
+    >
+      INIZIA
+    </button>
+    
+    <p className="mt-8 text-[10px] text-white/20 font-black uppercase tracking-[0.3em]">
+      © 2026 SOCIAL PARKING
+    </p>
+  </div>
+);
+
+const CountdownTimer = ({ timestamp, now, label, compact = false }: {
+  timestamp: any,
+  now: number,
+  label?: string,
+  compact?: boolean
+}) => {
+  const pTime = timestamp?.toDate ? timestamp.toDate().getTime() : now;
+  const expiryTime = pTime + PARKING_EXPIRY_MS;
+  const remainingMs = expiryTime - now;
+  const remainingSecs = Math.max(0, Math.floor(remainingMs / 1000));
+  const progress = Math.min(100, (remainingSecs / PARKING_EXPIRY_SECS) * 100);
+
+  const minutes = Math.floor(remainingSecs / 60);
+  const seconds = remainingSecs % 60;
+  const displayTime = `${minutes}.${seconds.toString().padStart(2, '0')}`;
+
+  const progressColor = remainingSecs > 60 ? "bg-green-500" : remainingSecs > 30 ? "bg-orange-500" : "bg-red-500";
+
+  return (
+    <div className={compact ? "w-full space-y-1" : "w-full space-y-4"}>
+      <div className={cn("flex items-end gap-2", compact ? "justify-start" : "justify-between")}>
+        {label && <span className={cn("text-white/50 font-black uppercase tracking-widest pb-0.5", compact ? "text-[7px]" : "text-sm")}>{label}</span>}
+        <span className={cn("font-black leading-none text-orange-500", compact ? "text-lg" : "text-3xl")}>{displayTime}</span>
+      </div>
+      <div className={cn("relative w-full overflow-hidden rounded-full", compact ? "h-1 bg-white/10" : "h-3 bg-white/10")}>
+        <div
+          className={cn("h-full transition-all duration-1000 shadow-[0_0_10px_rgba(0,0,0,0.5)]", progressColor)}
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+    </div>
+  );
+};
+
+export default function Home() {
+  const [isClient, setIsClient] = useState(false);
+  const [lang, setLang] = useState<'it' | 'en'>('it');
+  const [isSearching, setIsSearching] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
+  const [now, setNow] = useState(0);
+  const [showFreedBanner, setShowFreedBanner] = useState(false);
+  const [showCancelledBanner, setShowCancelledBanner] = useState(false);
+  const [showUnavailableBanner, setShowUnavailableBanner] = useState(false);
+  
+  // Hydration guard per localStorage
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  
+  const [showNotifNudge, setShowNotifNudge] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [viewState, setViewState] = useState({
+    latitude: 41.9027835,
+    longitude: 12.4963655,
+    zoom: 16.5,
+    pitch: 0,
+    bearing: 0,
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const t = translations[lang] || translations.it;
+  const { toast } = useToast();
+
+  const { user: currentUser, loading: userLoading } = useUser();
+  const auth = useAuth();
+  const firestore = useFirestore();
+  const { data: parkingsData } = useCollection<any>(
+    !userLoading && currentUser ? 'parkings' : null
+  );
+  const { data: userData } = useDoc<any>(currentUser ? `users/${currentUser.uid}` : null);
+  const { playSound } = useAudio();
+
+  const mapRef = useRef<MapRef | null>(null);
+  const prevParkingsCount = useRef(0);
+  const lastActiveBookingId = useRef<string | null>(null);
+  const lastNotifyTime = useRef<number>(0);
+
+  // --- CUSTOM HOOKS ---
+  const handleLocationUpdate = useCallback((loc: any) => {
+    if (currentUser && firestore) {
+      updateDocumentNonBlocking(firestore, `users/${currentUser.uid}`, {
+        latitude: loc.latitude,
+        longitude: loc.longitude,
+        lastLocationUpdate: serverTimestamp()
+      });
+    }
+
+    if (!hasInitialCentered.current) {
+      setViewState(prev => ({
+        ...prev,
+        latitude: loc.latitude,
+        longitude: loc.longitude,
+        zoom: 16.5,
+        transitionDuration: 1000
+      }));
+      hasInitialCentered.current = true;
+    }
+  }, [currentUser, firestore]);
+
+  const { userLocation, startGps, hasInitialCentered } = useGps(handleLocationUpdate);
+  const { ensurePushSubscription } = usePushSubscription(firestore, currentUser?.uid);
+
+  const triggerHaptic = (style: 'light' | 'medium' | 'heavy' = 'light') => {
+    if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+      const patterns = { light: 10, medium: 30, heavy: 60 };
+      navigator.vibrate(patterns[style]);
+    }
+  };
+
+  useEffect(() => {
+    setIsClient(true);
+    setNow(Date.now());
+    
+    // Inizializza onboarding solo sul client
+    const hasSeen = localStorage.getItem('sp-onboarded');
+    if (!hasSeen) setShowOnboarding(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isClient || userLoading || !currentUser) return;
+    
+    const hasAsked = localStorage.getItem('sp-notif-asked') === 'true';
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+    const permission = typeof Notification !== 'undefined' ? Notification.permission : 'default';
+
+    if (!hasAsked && !isStandalone && permission === 'default') {
+      const timer = setTimeout(() => setShowNotifNudge(true), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [isClient, userLoading, currentUser]);
+
+  useEffect(() => {
+    if (isClient) startGps();
+  }, [isClient, startGps]);
+
+  useEffect(() => {
+    if (isClient && auth && !userLoading && !currentUser) {
+      signInAnonymously(auth).catch(() => {});
+    }
+  }, [isClient, auth, currentUser, userLoading]);
+
+  const activeBooking = useMemo(() => {
+    if (!currentUser || !Array.isArray(parkingsData) || now === 0) return null;
+    const threeMinutesAgo = new Date(now - PARKING_EXPIRY_MS);
+    return parkingsData.find((p: any) => {
+      const pTime = p.timestamp?.toDate ? p.timestamp.toDate() : null;
+      const isMine = p.reservedById === currentUser.uid && p.status === 'in arrivo';
+      return isMine && (pTime && pTime > threeMinutesAgo);
+    });
+  }, [parkingsData, currentUser, now]);
+
+  const myActiveSpot = useMemo(() => {
+    if (!isClient || !currentUser || !Array.isArray(parkingsData) || now === 0) return null;
+    const threeMinutesAgo = new Date(now - PARKING_EXPIRY_MS);
+    return parkingsData.find(p =>
+      p.userId === currentUser.uid &&
+      p.timestamp?.toDate &&
+      p.timestamp.toDate() > threeMinutesAgo
+    );
+  }, [isClient, currentUser, parkingsData, now]);
+
+  const allAvailableSpots = useMemo(() => {
+    if (!isClient || !Array.isArray(parkingsData) || now === 0) return [];
+    const threeMinutesAgo = new Date(now - PARKING_EXPIRY_MS);
+    return parkingsData.filter(p => {
+      const pTime = p.timestamp?.toDate ? p.timestamp.toDate() : null;
+      return pTime && pTime > threeMinutesAgo;
+    });
+  }, [parkingsData, now, isClient]);
+
+  const dailyFreedCount = useMemo(() => {
+    if (!Array.isArray(parkingsData)) return 0;
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    return parkingsData.filter(p => p.timestamp?.toDate && p.timestamp.toDate() > startOfDay).length;
+  }, [parkingsData]);
+
+  const myTodayCount = useMemo(() => {
+    if (!Array.isArray(parkingsData) || !currentUser) return 0;
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    return parkingsData.filter(p =>
+      p.userId === currentUser.uid &&
+      p.timestamp?.toDate &&
+      p.timestamp.toDate() > startOfDay
+    ).length;
+  }, [parkingsData, currentUser]);
+
+  const nearbyListSpots = useMemo(() => {
+    if (!isClient || !userLocation || !allAvailableSpots) return [];
+    return allAvailableSpots.filter(s =>
+      s.status === 'libero' && getHaversineDistance(userLocation, s) < NEARBY_SEARCH_RADIUS_M
+    );
+  }, [userLocation, allAvailableSpots, isClient]);
+
+  const weeklyLeaderboard = useMemo(() => {
+    if (!Array.isArray(parkingsData)) return [];
+    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    
+    const counts: Record<string, number> = {};
+    parkingsData.forEach(p => {
+      if (p.userId && p.timestamp?.toDate && p.timestamp.toDate() > weekAgo) {
+        counts[p.userId] = (counts[p.userId] || 0) + 1;
+      }
+    });
+    
+    return Object.entries(counts)
+      .sort(([,a],[,b]) => b - a)
+      .slice(0, 5)
+      .map(([userId, count], i) => ({
+        rank: i + 1,
+        userId,
+        count,
+        isMe: userId === currentUser?.uid,
+        label: userId === currentUser?.uid ? 'Tu' : `Utente ${userId.slice(-4).toUpperCase()}`,
+      }));
+  }, [parkingsData, currentUser]);
+
+  const hasActiveTimer = !!activeBooking || !!myActiveSpot;
+  useEffect(() => {
+    if (!hasActiveTimer) return;
+    const interval = setInterval(() => setNow(Date.now()), 1000);
+    return () => interval && clearInterval(interval);
+  }, [hasActiveTimer]);
+
+  useEffect(() => {
+    if (activeBooking) {
+      lastActiveBookingId.current = activeBooking.id;
+    } else if (lastActiveBookingId.current && !userLoading) {
+      const stillExists = parkingsData?.find(p => p.id === lastActiveBookingId.current);
+      if (!stillExists && !showCancelledBanner) {
+        setShowUnavailableBanner(true);
+        playSound('cancellation');
+        triggerHaptic('heavy');
+        setTimeout(() => setShowUnavailableBanner(false), 6000);
+      }
+      lastActiveBookingId.current = null;
+    }
+  }, [activeBooking, parkingsData, showCancelledBanner, userLoading, playSound]);
+
+  useEffect(() => {
+    if (isSearching && parkingsData && isClient) {
+      const availableCount = parkingsData.filter((p: any) => p.status === 'libero').length;
+      if (availableCount > prevParkingsCount.current) {
+        playSound('notification');
+        triggerHaptic('light');
+      }
+      prevParkingsCount.current = availableCount;
+    }
+  }, [parkingsData, isSearching, isClient, playSound]);
+
+  const handleCenterMap = useCallback(() => {
+    triggerHaptic('light');
+    if (!userLocation) { startGps(); return; }
+    setViewState(v => ({
+      ...v,
+      latitude: userLocation.latitude,
+      longitude: userLocation.longitude,
+      zoom: 16.5,
+      transitionDuration: 1000
+    }));
+  }, [userLocation, startGps]);
+
+  const handleToggleSearching = async (checked: boolean) => {
+    triggerHaptic('light');
+    setIsSearching(checked);
+    Analytics.searchToggled(checked).catch(()=>{});
+    if (checked) ensurePushSubscription();
+    if (currentUser && firestore) {
+      updateDocumentNonBlocking(firestore, `users/${currentUser.uid}`, {
+        isSearching: checked,
+      });
+    }
+  };
+
+  const handleUnpark = useCallback(async () => {
+    if (!userLocation || !currentUser || !firestore || isSubmitting) return;
+    setIsSubmitting(true);
+    triggerHaptic('medium');
+    ensurePushSubscription();
+
+    const parkingsCol = collection(firestore, 'parkings');
+    const parkingData = {
+      latitude: userLocation.latitude,
+      longitude: userLocation.longitude,
+      status: 'libero',
+      timestamp: serverTimestamp(),
+      userId: currentUser.uid,
+    };
+
+    addDocumentNonBlocking(parkingsCol, parkingData);
+
+    const todayStr = new Date().toDateString();
+    const yesterdayStr = new Date(Date.now() - 86400000).toDateString();
+    const currentStreak = userData?.streak || 0;
+    const lastFreedDate = userData?.lastFreedDate || '';
+    
+    let newStreak = currentStreak;
+    if (lastFreedDate !== todayStr) {
+      newStreak = lastFreedDate === yesterdayStr ? currentStreak + 1 : 1;
+    }
+    
+    updateDocumentNonBlocking(firestore, `users/${currentUser.uid}`, {
+      lastFreedDate: todayStr,
+      streak: newStreak,
+      bestStreak: Math.max(newStreak, userData?.bestStreak || 0),
+      'stats.parkingsFreed': increment(1)
+    });
+
+    Analytics.parkingFreed(newStreak).catch(()=>{});
+
+    const nowTs = Date.now();
+    if (nowTs - lastNotifyTime.current > NOTIFY_THROTTLE_MS) {
+      lastNotifyTime.current = nowTs;
+      notifyNearby({
+        latitude: userLocation.latitude,
+        longitude: userLocation.longitude,
+        excludeUserId: currentUser.uid,
+      }).catch(() => {});
+    }
+
+    setShowFreedBanner(true);
+    setTimeout(() => {
+      setShowFreedBanner(false);
+      setIsSubmitting(false);
+    }, 5000);
+  }, [currentUser, firestore, userLocation, isSubmitting, userData, ensurePushSubscription]);
+
+  const handleBookSpot = useCallback((spot: any) => {
+    if (!currentUser || !firestore || activeBooking) return;
+    const code = generateBookingCode(4);
+    playSound('booking');
+    triggerHaptic('heavy');
+    Analytics.parkingBooked().catch(()=>{});
+
+    updateDocumentNonBlocking(firestore, `parkings/${spot.id}`, {
+      status: 'in arrivo',
+      reservedById: currentUser.uid,
+      reservedByName: currentUser.displayName || 'Utente',
+      bookingCode: code,
+    });
+
+    updateDocumentNonBlocking(firestore, `users/${currentUser.uid}`, {
+      'stats.bookingsMade': increment(1)
+    });
+
+    setIsSearching(false);
+    setIsNavigating(false);
+  }, [currentUser, firestore, activeBooking, playSound]);
+
+  const handleCancelBooking = useCallback((spot: any) => {
+    if (!currentUser || !firestore) return;
+    playSound('cancellation');
+    triggerHaptic('medium');
+    Analytics.bookingCancelled().catch(()=>{});
+    updateDocumentNonBlocking(firestore, `parkings/${spot.id}`, {
+      status: 'libero',
+      reservedById: null,
+      reservedByName: null,
+      bookingCode: null
+    });
+    setIsNavigating(false);
+    setShowCancelledBanner(true);
+    setTimeout(() => setShowCancelledBanner(false), 5000);
+  }, [currentUser, firestore, playSound]);
+
+  const handleShare = useCallback(async (spot?: any) => {
+    const appUrl = 'https://www.siigep.tech/come-funziona';
+    const streak = userData?.streak || 0;
+    const streakText = streak > 2 ? ` Sono a ${streak} giorni di fila 🔥` : '';
+
+    Analytics.shareTriggered(spot ? 'found' : 'freed').catch(()=>{});
+
+    const message = spot
+      ? `🅿️ Ho trovato parcheggio in meno di un minuto su Social Parking!${streakText} È gratis: ${appUrl}`
+      : `🅿️ Ho appena liberato un posto su Social Parking!${streakText} Trova parcheggio vicino a te: ${appUrl}`;
+
+    try {
+      if (typeof navigator !== 'undefined' && navigator.share) {
+        await navigator.share({
+          title: '🅿️ Social Parking',
+          text: message,
+          url: appUrl,
+        });
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(message);
+        toast({ title: '✅ Link copiato negli appunti!' });
+      }
+    } catch {
+      // User cancelled
+    }
+  }, [toast, userData]);
+
+  const handleFinishOnboarding = () => {
+    localStorage.setItem('sp-onboarded', 'true');
+    setShowOnboarding(false);
+    triggerHaptic('heavy');
+    Analytics.onboardingCompleted().catch(()=>{});
+  };
+
+  const handleNotifNudge = async (active: boolean) => {
+    triggerHaptic('light');
+    localStorage.setItem('sp-notif-asked', 'true');
+    setShowNotifNudge(false);
+    if (active) {
+      await ensurePushSubscription();
+    }
+  };
+
+  const parkingsFreedByUser = userData?.stats?.parkingsFreed || 0;
+  const isFirstSession = typeof window !== 'undefined' && !localStorage.getItem('sp-onboarded');
+
+  const unparkLabel = isSubmitting ? (
+    <span className="flex items-center gap-2 italic">
+      <Loader2 className="h-5 w-5 animate-spin" /> Segnalazione in corso...
+    </span>
+  ) : !userLocation ? (
+    <span className="flex items-center gap-2">
+      <span className="animate-pulse">📍</span> Attendi GPS...
+    </span>
+  ) : (
+    t.unpark
+  );
+
+  if (!isClient) return <div className="h-screen w-screen bg-slate-950" />;
+
+  return (
+    <div className="relative h-screen w-screen overflow-hidden bg-slate-950">
+      {showOnboarding && <OnboardingScreen onFinish={handleFinishOnboarding} />}
+      
+      <Map
+        ref={mapRef}
+        viewState={viewState}
+        setViewState={setViewState}
+        userLocation={userLocation}
+        mapParkingSpots={allAvailableSpots}
+        navigationTarget={isNavigating && activeBooking ? activeBooking : null}
+      />
+
+      <div className="absolute top-16 right-4 z-[50] flex flex-col items-center gap-4">
+        <Button
+          size="icon"
+          onClick={handleCenterMap}
+          className="rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.5)] h-12 w-12 bg-blue-600 text-white pointer-events-auto border-2 border-white/20 hover:bg-blue-700 active:scale-95 transition-all"
+        >
+          <Crosshair className="h-6 w-6" />
+        </Button>
+        <div className="flex flex-col gap-4 pointer-events-auto bg-black/40 p-2.5 rounded-2xl backdrop-blur-xl border border-white/10">
+          <ItalyFlag onClick={() => { triggerHaptic(); setLang('it'); }} />
+          <UKFlag onClick={() => { triggerHaptic(); setLang('en'); }} />
+        </div>
+      </div>
+
+      <div className="absolute top-16 left-4 z-[50] flex flex-col gap-3 pointer-events-none w-72 max-w-[90vw]">
+        {!activeBooking && !myActiveSpot && (
+          <div className="flex flex-col gap-3 pointer-events-auto">
+            <div className="w-full flex flex-col items-center mb-1">
+              <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest animate-in fade-in slide-in-from-bottom-2">
+                {parkingsFreedByUser > 0 
+                  ? t.veteranHero.replace('{count}', parkingsFreedByUser.toString()) 
+                  : t.newHero}
+              </p>
+            </div>
+            <Button
+              onClick={handleUnpark}
+              className={cn(
+                "w-full font-black text-lg h-13 rounded-[1.5rem] shadow-2xl bg-black text-white border-2 border-white/10 hover:bg-slate-900 active:bg-slate-800 disabled:opacity-100 transition-all uppercase tracking-tight",
+                (!userLocation || isSubmitting) && "opacity-70 cursor-not-allowed",
+                isFirstSession && "animate-pulse"
+              )}
+              disabled={!userLocation || isSubmitting}
+            >
+              {unparkLabel}
+            </Button>
+
+            <Card className="w-full shadow-2xl rounded-[1.5rem] border-2 border-white/10 max-h-[45vh] overflow-hidden flex flex-col bg-black text-white">
+              <CardContent className="p-3 flex flex-col gap-2 overflow-y-auto">
+                <div className="flex flex-col gap-1 shrink-0">
+                  <div className="flex items-center justify-between h-8">
+                    <Label className="font-black text-lg text-white uppercase tracking-tight">{t.searchTitle}</Label>
+                    <Switch checked={isSearching} onCheckedChange={handleToggleSearching} className="data-[state=checked]:bg-blue-600 h-6 w-11" />
+                  </div>
+                  {!isSearching && (
+                    <p className="text-[10px] text-white/30 font-bold mt-1 animate-in fade-in slide-in-from-top-1 duration-300">
+                      Attiva per vedere i posti liberi vicino a te 📍
+                    </p>
+                  )}
+                </div>
+                {isSearching && (
+                  <div className="space-y-3">
+                    {nearbyListSpots.length > 0 ? nearbyListSpots.map((spot) => (
+                      <div key={spot.id} className="p-3 bg-white/5 border border-white/5 rounded-xl flex flex-col gap-2 animate-in fade-in zoom-in-95">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <p className="text-green-400 font-black text-xs uppercase leading-none">{t.freeSpot}</p>
+                            <p className="text-[9px] text-white/50 font-bold mt-1 uppercase tracking-wider">
+                              {Math.round(getHaversineDistance(userLocation, spot))}m da te
+                            </p>
+                          </div>
+                          <div className="flex gap-1">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => handleShare(spot)}
+                              className="h-8 w-8 text-white/40 hover:text-white"
+                            >
+                              <Share2 className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => handleBookSpot(spot)}
+                              className="rounded-lg h-8 px-4 text-[10px] font-black bg-blue-600 hover:bg-blue-700 active:scale-95 transition-all text-white border-none"
+                            >
+                              {t.book}
+                            </Button>
+                          </div>
+                        </div>
+                        <CountdownTimer timestamp={spot.timestamp} now={now} compact={true} />
+                      </div>
+                    )) : <p className="text-[10px] text-center text-white/40 italic py-4 font-medium tracking-wide">{t.noParking}</p>}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {myActiveSpot && !activeBooking && (
+          <Card className="w-full shadow-2xl rounded-[2.5rem] bg-black border-2 border-white/10 text-white pointer-events-auto overflow-hidden animate-in fade-in slide-in-from-left-6 duration-500">
+            <CardContent className="p-8 space-y-7 text-center">
+              <div className="flex items-center justify-center gap-4">
+                {myActiveSpot.status === 'in arrivo'
+                  ? <CheckCircle2 className="text-green-500 h-10 w-10 drop-shadow-[0_0_8px_rgba(34,197,94,0.4)]" />
+                  : <Clock className="text-orange-500 h-10 w-10 animate-pulse" />
+                }
+                <p className="font-black text-xl leading-tight text-left uppercase tracking-tighter">
+                  {myActiveSpot.status === 'in arrivo' ? t.spotBooked : t.waitingForBooking}
+                </p>
+              </div>
+              {myActiveSpot.status === 'in arrivo' && myActiveSpot.bookingCode && (
+                <div className="space-y-2 bg-white/5 p-5 rounded-[2rem] border border-white/10 shadow-inner">
+                  <p className="text-[10px] text-white/50 font-black uppercase tracking-widest">{t.matchCodeLabel}</p>
+                  <p className="text-5xl font-black text-orange-500 drop-shadow-[0_0_15px_rgba(249,115,22,0.3)]">{myActiveSpot.bookingCode}</p>
+                  <p className="text-sm text-white/90 font-bold">{t.waitUser}</p>
+                </div>
+              )}
+              <CountdownTimer timestamp={myActiveSpot.timestamp} now={now} label={t.residueTime} />
+              <div className="pt-4 flex flex-col gap-2">
+                <Button
+                  onClick={() => handleShare(myActiveSpot)}
+                  variant="outline"
+                  className="w-full text-white font-black h-12 rounded-2xl border-white/10 bg-white/5 uppercase text-xs tracking-widest"
+                >
+                  <Share2 className="h-4 w-4 mr-2" />
+                  {t.share}
+                </Button>
+                <Button
+                  onClick={() => { triggerHaptic(); deleteDocumentNonBlocking(firestore!, `parkings/${myActiveSpot.id}`); }}
+                  variant="ghost"
+                  className="w-full text-white/40 font-black h-10 rounded-2xl hover:text-white uppercase text-[9px] tracking-widest"
+                >
+                  {t.cancelFreeing}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {activeBooking && (
+          <Card className={cn(
+            "w-full shadow-2xl rounded-[1.5rem] bg-black border-2 border-white/10 text-white pointer-events-auto transition-all duration-700 overflow-hidden",
+            isNavigating ? 'max-h-[250px]' : 'max-h-[550px]'
+          )}>
+            <CardContent className={cn("transition-all duration-500", isNavigating ? "p-3" : "p-8")}>
+              {!isNavigating ? (
+                <div className="flex flex-col items-center gap-6 animate-in fade-in zoom-in-95 duration-500">
+                  <div className="text-center space-y-2">
+                    <p className="text-[10px] text-white/50 font-black uppercase tracking-[0.2em]">{t.matchCodeTitle}</p>
+                    <p className="text-7xl font-black text-orange-500 drop-shadow-[0_0_25px_rgba(249,115,22,0.5)]">
+                      {activeBooking.bookingCode}
+                    </p>
+                  </div>
+                  <div className="w-full space-y-4 pt-2">
+                    <Button
+                      onClick={() => { triggerHaptic(); setIsNavigating(true); }}
+                      className="w-full bg-white text-black font-black rounded-[1.5rem] h-16 hover:bg-white/90 active:scale-95 transition-all text-lg uppercase tracking-tight"
+                    >
+                      {t.getDirections}
+                    </Button>
+                    <Button
+                      onClick={() => handleCancelBooking(activeBooking)}
+                      className="w-full bg-[#3d0a0a] text-white font-black rounded-[1.5rem] h-16 border-2 border-[#5c1212] hover:bg-[#4d0d0d] active:scale-95 transition-all text-base uppercase tracking-tighter"
+                    >
+                      {t.cancelBooking}
+                    </Button>
+                  </div>
+                  <div className="w-full px-2">
+                    <CountdownTimer timestamp={activeBooking.timestamp} now={now} label={t.residueTime} compact />
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-top-4 duration-500">
+                  <div className="flex items-center justify-between px-1">
+                    <span className="text-[7px] font-black uppercase text-white/40 tracking-[0.2em] leading-none">
+                      {t.navActive}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => { triggerHaptic(); setIsNavigating(false); }}
+                      className="h-5 w-5 text-white/30 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+                    >
+                      <Maximize2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                  <div className="relative flex items-center justify-between bg-white/5 p-2 py-1 rounded-[1.2rem] border border-white/10 gap-2 shadow-inner">
+                    <div className="flex flex-col min-w-[70px] text-left">
+                      <span className="text-[6px] font-black text-white/40 uppercase tracking-widest leading-none">CODICE</span>
+                      <span className="text-[6px] font-black text-white/40 uppercase tracking-widest leading-tight">PRENOTAZIONE</span>
+                    </div>
+                    <span className="text-3xl font-black text-orange-500 tracking-tighter leading-none flex-1 text-center drop-shadow-[0_0_8px_rgba(249,115,22,0.4)]">
+                      {activeBooking.bookingCode}
+                    </span>
+                  </div>
+                  <div className="px-1">
+                    <CountdownTimer timestamp={activeBooking.timestamp} now={now} label={t.residueTime} compact />
+                  </div>
+                  <div className="pt-1">
+                    <Button
+                      onClick={() => handleCancelBooking(activeBooking)}
+                      className="w-full bg-red-600 hover:bg-red-700 text-white font-black rounded-[0.8rem] h-9 active:scale-95 transition-all text-[10px] uppercase tracking-widest shadow-lg shadow-red-600/30"
+                    >
+                      {t.cancelShort}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {showNotifNudge && (
+        <div className="absolute bottom-20 left-4 right-4 z-[100] animate-in fade-in slide-in-from-bottom-10 duration-500">
+          <div className="bg-slate-900 border-2 border-blue-600/30 rounded-[1.5rem] p-5 shadow-2xl backdrop-blur-xl flex flex-col gap-4 text-white">
+            <div className="flex items-start justify-between gap-3">
+              <div className="bg-blue-600/20 p-2.5 rounded-xl">
+                <Bell className="h-5 w-5 text-blue-400" />
+              </div>
+              <p className="flex-1 text-sm font-bold leading-tight pt-1">
+                {t.notifNudge}
+              </p>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => handleNotifNudge(false)}
+                className="h-8 w-8 text-white/40 hover:text-white rounded-full"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => handleNotifNudge(true)}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl h-11 text-xs uppercase tracking-wider"
+              >
+                {t.notifYes}
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => handleNotifNudge(false)}
+                className="flex-1 border-white/10 bg-white/5 text-white/70 font-bold rounded-xl h-11 text-xs uppercase tracking-wider"
+              >
+                {t.notifLater}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showFreedBanner && (
+        <div className="absolute bottom-16 left-4 right-4 z-[100] animate-in fade-in slide-in-from-bottom-6 duration-500">
+          <div className="bg-black/95 text-white p-6 rounded-[2rem] shadow-[0_10px_40px_rgba(0,0,0,0.6)] font-black text-xl text-center border-2 border-white/10 backdrop-blur-xl uppercase tracking-tight">
+            <div className="flex flex-col items-center gap-1">
+              <span>{t.parkingFreed}</span>
+              {(userData?.streak || 0) > 1 && (
+                <span className="text-orange-400 text-sm">
+                  🔥 {userData?.streak} giorni di fila!
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showCancelledBanner && (
+        <div className="absolute bottom-16 left-4 right-4 z-[100] animate-in fade-in slide-in-from-bottom-6 duration-500">
+          <div className="bg-black/95 text-white p-6 rounded-[2rem] shadow-[0_10px_40px_rgba(0,0,0,0.6)] font-black text-xl text-center border-2 border-white/10 backdrop-blur-xl uppercase tracking-tight">
+            {t.bookingCancelled}
+          </div>
+        </div>
+      )}
+
+      {showUnavailableBanner && (
+        <div className="absolute bottom-16 left-4 right-4 z-[100] animate-in fade-in slide-in-from-bottom-6 duration-500">
+          <div className="bg-black/95 text-white p-8 rounded-[2.5rem] shadow-[0_15px_60px_rgba(0,0,0,0.8)] font-black text-2xl text-center border-2 border-red-900/50 backdrop-blur-2xl uppercase tracking-tight leading-tight">
+            {t.spotUnavailable}
+          </div>
+        </div>
+      )}
+
+      {weeklyLeaderboard.length > 1 && (
+        <div className="absolute bottom-16 right-4 z-[50]">
+          <button
+            onClick={() => setShowLeaderboard(v => !v)}
+            className="bg-black/80 border border-white/10 rounded-full px-3 py-2 text-[10px] font-black text-white/60 uppercase tracking-widest backdrop-blur-md"
+          >
+            🏆 Top 5
+          </button>
+          
+          {showLeaderboard && (
+            <div className="absolute bottom-10 right-0 w-52 bg-black/95 border border-white/10 rounded-2xl p-4 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-200">
+              <p className="text-[9px] font-black text-white/40 uppercase tracking-widest mb-3">
+                Classifica settimana
+              </p>
+              {weeklyLeaderboard.map(entry => (
+                <div key={entry.userId} className={`flex items-center justify-between py-1.5 ${entry.isMe ? 'text-orange-400' : 'text-white/70'}`}>
+                  <span className="text-xs font-black">
+                    {entry.rank === 1 ? '🥇' : entry.rank === 2 ? '🥈' : entry.rank === 3 ? '🥉' : `${entry.rank}.`} {entry.label}
+                  </span>
+                  <span className="text-xs font-black">{entry.count} 🅿️</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="absolute bottom-4 left-0 right-0 z-[50] text-center pointer-events-none px-6 space-y-1">
+        <div className="flex flex-col items-center gap-1.5">
+          <p className="text-[10px] text-white/60 font-black uppercase tracking-widest bg-black/60 inline-block px-4 py-1.5 rounded-full backdrop-blur-md border border-white/10 shadow-lg">
+            {dailyFreedCount} {t.todayFreed}
+            {myTodayCount > 0 && ` · Tu: ${myTodayCount} 🏆`}
+          </p>
+          {parkingsFreedByUser > 0 && (
+            <p className="text-[9px] text-orange-400 font-bold uppercase tracking-wider bg-orange-400/10 px-3 py-1 rounded-full border border-orange-400/20 backdrop-blur-sm">
+              {t.personalStats}: {parkingsFreedByUser} 🅿️
+            </p>
+          )}
+        </div>
+        <p className="text-[9px] text-white/30 uppercase tracking-[0.2em] font-black opacity-60 pt-2">
+          © 2026 SOCIAL PARKING – ALL RIGHTS RESERVED. WWW.SIIGEP.TECH
+        </p>
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="src/components/ui/alert-dialog.tsx">
+"use client"
+
+import * as React from "react"
+import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
+
+import { cn } from "@/lib/utils"
+import { buttonVariants } from "@/components/ui/button"
+
+const AlertDialog = AlertDialogPrimitive.Root
+
+const AlertDialogTrigger = AlertDialogPrimitive.Trigger
+
+const AlertDialogPortal = AlertDialogPrimitive.Portal
+
+const AlertDialogOverlay = React.forwardRef<
+  React.ElementRef<typeof AlertDialogPrimitive.Overlay>,
+  React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Overlay>
+>(({ className, ...props }, ref) => (
+  <AlertDialogPrimitive.Overlay
+    className={cn(
+      "fixed inset-0 z-50 bg-background/80 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      className
+    )}
+    {...props}
+    ref={ref}
+  />
+))
+AlertDialogOverlay.displayName = AlertDialogPrimitive.Overlay.displayName
+
+const AlertDialogContent = React.forwardRef<
+  React.ElementRef<typeof AlertDialogPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Content>
+>(({ className, ...props }, ref) => (
+  <AlertDialogPortal>
+    <AlertDialogOverlay />
+    <AlertDialogPrimitive.Content
+      ref={ref}
+      className={cn(
+        "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg",
+        className
+      )}
+      {...props}
+    />
+  </AlertDialogPortal>
+))
+AlertDialogContent.displayName = AlertDialogPrimitive.Content.displayName
+
+const AlertDialogHeader = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => (
+  <div
+    className={cn("flex flex-col space-y-2 text-center sm:text-left", className)}
+    {...props}
+  />
+)
+AlertDialogHeader.displayName = "AlertDialogHeader"
+
+const AlertDialogFooter = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => (
+  <div
+    className={cn(
+      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
+      className
+    )}
+    {...props}
+  />
+)
+AlertDialogFooter.displayName = "AlertDialogFooter"
+
+const AlertDialogTitle = React.forwardRef<
+  React.ElementRef<typeof AlertDialogPrimitive.Title>,
+  React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Title>
+>(({ className, ...props }, ref) => (
+  <AlertDialogPrimitive.Title
+    ref={ref}
+    className={cn("text-lg font-semibold", className)}
+    {...props}
+  />
+))
+AlertDialogTitle.displayName = AlertDialogPrimitive.Title.displayName
+
+const AlertDialogDescription = React.forwardRef<
+  React.ElementRef<typeof AlertDialogPrimitive.Description>,
+  React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Description>
+>(({ className, ...props }, ref) => (
+  <AlertDialogPrimitive.Description
+    ref={ref}
+    className={cn("text-sm text-muted-foreground", className)}
+    {...props}
+  />
+))
+AlertDialogDescription.displayName =
+  AlertDialogPrimitive.Description.displayName
+
+const AlertDialogAction = React.forwardRef<
+  React.ElementRef<typeof AlertDialogPrimitive.Action>,
+  React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Action>
+>(({ className, ...props }, ref) => (
+  <AlertDialogPrimitive.Action
+    ref={ref}
+    className={cn(buttonVariants(), className)}
+    {...props}
+  />
+))
+AlertDialogAction.displayName = AlertDialogPrimitive.Action.displayName
+
+const AlertDialogCancel = React.forwardRef<
+  React.ElementRef<typeof AlertDialogPrimitive.Cancel>,
+  React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Cancel>
+>(({ className, ...props }, ref) => (
+  <AlertDialogPrimitive.Cancel
+    ref={ref}
+    className={cn(
+      buttonVariants({ variant: "outline" }),
+      "mt-2 sm:mt-0",
+      className
+    )}
+    {...props}
+  />
+))
+AlertDialogCancel.displayName = AlertDialogPrimitive.Cancel.displayName
+
+export {
+  AlertDialog,
+  AlertDialogPortal,
+  AlertDialogOverlay,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+}
+</file>
+
+<file path="src/components/ui/button.tsx">
+import * as React from "react"
+import { Slot } from "@radix-ui/react-slot"
+import { cva, type VariantProps } from "class-variance-authority"
+
+import { cn } from "@/lib/utils"
+
+const buttonVariants = cva(
+  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        destructive:
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        outline:
+          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+        secondary:
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
+        link: "text-primary underline-offset-4 hover:underline",
+      },
+      size: {
+        default: "h-10 px-4 py-2",
+        sm: "h-9 rounded-md px-3",
+        lg: "h-11 rounded-md px-8",
+        icon: "h-10 w-10",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+)
+
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {
+  asChild?: boolean
+}
+
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant, size, asChild = false, ...props }, ref) => {
+    const Comp = asChild ? Slot : "button"
+    return (
+      <Comp
+        className={cn(buttonVariants({ variant, size, className }))}
+        ref={ref}
+        {...props}
+      />
+    )
+  }
+)
+Button.displayName = "Button"
+
+export { Button, buttonVariants }
+</file>
+
+<file path="src/components/ui/card.tsx">
+import * as React from "react"
+
+import { cn } from "@/lib/utils"
+
+const Card = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn(
+      "rounded-lg border bg-card text-card-foreground shadow-sm",
+      className
+    )}
+    {...props}
+  />
+))
+Card.displayName = "Card"
+
+const CardHeader = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("flex flex-col space-y-1.5 p-6", className)}
+    {...props}
+  />
+))
+CardHeader.displayName = "CardHeader"
+
+const CardTitle = React.forwardRef<
+  HTMLParagraphElement,
+  React.HTMLAttributes<HTMLHeadingElement>
+>(({ className, ...props }, ref) => (
+  <h3
+    ref={ref}
+    className={cn(
+      "text-2xl font-semibold leading-none tracking-tight",
+      className
+    )}
+    {...props}
+  />
+))
+CardTitle.displayName = "CardTitle"
+
+const CardDescription = React.forwardRef<
+  HTMLParagraphElement,
+  React.HTMLAttributes<HTMLParagraphElement>
+>(({ className, ...props }, ref) => (
+  <p
+    ref={ref}
+    className={cn("text-sm text-muted-foreground", className)}
+    {...props}
+  />
+))
+CardDescription.displayName = "CardDescription"
+
+const CardContent = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
+))
+CardContent.displayName = "CardContent"
+
+const CardFooter = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("flex items-center p-6 pt-0", className)}
+    {...props}
+  />
+))
+CardFooter.displayName = "CardFooter"
+
+export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }
+</file>
+
+<file path="src/components/ui/input.tsx">
+import * as React from "react"
+
+import { cn } from "@/lib/utils"
+
+export interface InputProps
+  extends React.InputHTMLAttributes<HTMLInputElement> {}
+
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ className, type, ...props }, ref) => {
+    return (
+      <input
+        type={type}
+        className={cn(
+          "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+          className
+        )}
+        ref={ref}
+        {...props}
+      />
+    )
+  }
+)
+Input.displayName = "Input"
+
+export { Input }
+</file>
+
+<file path="src/components/ui/label.tsx">
+"use client"
+
+import * as React from "react"
+import * as LabelPrimitive from "@radix-ui/react-label"
+import { cva, type VariantProps } from "class-variance-authority"
+
+import { cn } from "@/lib/utils"
+
+const labelVariants = cva(
+  "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+)
+
+const Label = React.forwardRef<
+  React.ElementRef<typeof LabelPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root> &
+    VariantProps<typeof labelVariants>
+>(({ className, ...props }, ref) => (
+  <LabelPrimitive.Root
+    ref={ref}
+    className={cn(labelVariants(), className)}
+    {...props}
+  />
+))
+Label.displayName = LabelPrimitive.Root.displayName
+
+export { Label }
+</file>
+
+<file path="src/components/ui/progress.tsx">
+"use client"
+
+import * as React from "react"
+import * as ProgressPrimitive from "@radix-ui/react-progress"
+
+import { cn } from "@/lib/utils"
+
+const Progress = React.forwardRef<
+  React.ElementRef<typeof ProgressPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root> & { indicatorClassName?: string }
+>(({ className, value, indicatorClassName, ...props }, ref) => (
+  <ProgressPrimitive.Root
+    ref={ref}
+    className={cn(
+      "relative h-4 w-full overflow-hidden rounded-full bg-secondary",
+      className
+    )}
+    {...props}
+  >
+    <ProgressPrimitive.Indicator
+      className={cn("h-full w-full flex-1 bg-primary transition-all", indicatorClassName)}
+      style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
+    />
+  </ProgressPrimitive.Root>
+))
+Progress.displayName = ProgressPrimitive.Root.displayName
+
+export { Progress }
+</file>
+
+<file path="src/components/ui/switch.tsx">
+"use client"
+
+import * as React from "react"
+import * as SwitchPrimitives from "@radix-ui/react-switch"
+
+import { cn } from "@/lib/utils"
+
+const Switch = React.forwardRef<
+  React.ElementRef<typeof SwitchPrimitives.Root>,
+  React.ComponentPropsWithoutRef<typeof SwitchPrimitives.Root>
+>(({ className, ...props }, ref) => (
+  <SwitchPrimitives.Root
+    className={cn(
+      "peer inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=unchecked]:bg-input",
+      className
+    )}
+    {...props}
+    ref={ref}
+  >
+    <SwitchPrimitives.Thumb
+      className={cn(
+        "pointer-events-none block h-5 w-5 rounded-full bg-background shadow-lg ring-0 transition-transform data-[state=checked]:translate-x-5 data-[state=unchecked]:translate-x-0"
+      )}
+    />
+  </SwitchPrimitives.Root>
+))
+Switch.displayName = SwitchPrimitives.Root.displayName
+
+export { Switch }
+</file>
+
+<file path="src/components/ui/toast.tsx">
+"use client"
+
+import * as React from "react"
+import * as ToastPrimitives from "@radix-ui/react-toast"
+import { cva, type VariantProps } from "class-variance-authority"
+import { X } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+
+const ToastProvider = ToastPrimitives.Provider
+
+const ToastViewport = React.forwardRef<
+  React.ElementRef<typeof ToastPrimitives.Viewport>,
+  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Viewport>
+>(({ className, ...props }, ref) => (
+  <ToastPrimitives.Viewport
+    ref={ref}
+    className={cn(
+      "fixed bottom-0 z-[100] flex max-h-screen w-full flex-col p-4 sm:bottom-0 sm:right-0 sm:top-auto sm:flex-col md:max-w-[420px]",
+      className
+    )}
+    {...props}
+  />
+))
+ToastViewport.displayName = ToastPrimitives.Viewport.displayName
+
+const toastVariants = cva(
+  "group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-2xl border p-6 pr-8 shadow-2xl transition-all data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=move]:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-bottom-full",
+  {
+    variants: {
+      variant: {
+        default: "border bg-background text-foreground",
+        destructive:
+          "destructive group border-destructive bg-destructive text-destructive-foreground",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  }
+)
+
+const Toast = React.forwardRef<
+  React.ElementRef<typeof ToastPrimitives.Root>,
+  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root> &
+    VariantProps<typeof toastVariants>
+>(({ className, variant, ...props }, ref) => {
+  return (
+    <ToastPrimitives.Root
+      ref={ref}
+      className={cn(toastVariants({ variant }), className)}
+      {...props}
+    />
+  )
+})
+Toast.displayName = ToastPrimitives.Root.displayName
+
+const ToastAction = React.forwardRef<
+  React.ElementRef<typeof ToastPrimitives.Action>,
+  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Action>
+>(({ className, ...props }, ref) => (
+  <ToastPrimitives.Action
+    ref={ref}
+    className={cn(
+      "inline-flex h-8 shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-sm font-medium ring-offset-background transition-colors hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 group-[.destructive]:border-muted/40 group-[.destructive]:hover:border-destructive/30 group-[.destructive]:hover:bg-destructive group-[.destructive]:hover:text-destructive-foreground group-[.destructive]:focus:ring-destructive",
+      className
+    )}
+    {...props}
+  />
+))
+ToastAction.displayName = ToastPrimitives.Action.displayName
+
+const ToastClose = React.forwardRef<
+  React.ElementRef<typeof ToastPrimitives.Close>,
+  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Close>
+>(({ className, ...props }, ref) => (
+  <ToastPrimitives.Close
+    ref={ref}
+    className={cn(
+      "absolute right-2 top-2 rounded-md p-1 text-foreground/50 opacity-0 transition-opacity hover:text-foreground focus:opacity-100 focus:outline-none focus:ring-2 group-hover:opacity-100 group-[.destructive]:text-red-300 group-[.destructive]:hover:text-red-50 group-[.destructive]:focus:ring-red-400 group-[.destructive]:focus:ring-offset-red-600",
+      className
+    )}
+    toast-close=""
+    {...props}
+  >
+    <X className="h-4 w-4" />
+  </ToastPrimitives.Close>
+))
+ToastClose.displayName = ToastPrimitives.Close.displayName
+
+const ToastTitle = React.forwardRef<
+  React.ElementRef<typeof ToastPrimitives.Title>,
+  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Title>
+>(({ className, ...props }, ref) => (
+  <ToastPrimitives.Title
+    ref={ref}
+    className={cn("text-sm font-semibold", className)}
+    {...props}
+  />
+))
+ToastTitle.displayName = ToastPrimitives.Title.displayName
+
+const ToastDescription = React.forwardRef<
+  React.ElementRef<typeof ToastPrimitives.Description>,
+  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Description>
+>(({ className, ...props }, ref) => (
+  <ToastPrimitives.Description
+    ref={ref}
+    className={cn("text-sm opacity-90", className)}
+    {...props}
+  />
+))
+ToastDescription.displayName = ToastPrimitives.Description.displayName
+
+type ToastProps = React.ComponentPropsWithoutRef<typeof Toast>
+
+type ToastActionElement = React.ReactElement<typeof ToastAction>
+
+export {
+  type ToastProps,
+  type ToastActionElement,
+  ToastProvider,
+  ToastViewport,
+  Toast,
+  ToastTitle,
+  ToastDescription,
+  ToastClose,
+  ToastAction,
+}
+</file>
+
+<file path="src/components/ui/toaster.tsx">
+"use client"
+
+import { useEffect, useState } from "react"
+import {
+  Toast,
+  ToastClose,
+  ToastDescription,
+  ToastProvider,
+  ToastTitle,
+  ToastViewport,
+} from "@/components/ui/toast"
+import { useToast } from "@/components/ui/use-toast"
+
+export function Toaster() {
+  const { toasts } = useToast()
+  const [mounted, setMounted] = useState(false)
+
+  // Hydration guard: renderizza solo sul client per evitare eccezioni Next.js 15
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) return null
+
+  return (
+    <ToastProvider duration={4000}>
+      {toasts.map(function ({ id, title, description, action, ...props }) {
+        return (
+          <Toast key={id} {...props}>
+            <div className="grid gap-1">
+              {title && <ToastTitle>{title}</ToastTitle>}
+              {description && (
+                <ToastDescription>{description}</ToastDescription>
+              )}
+            </div>
+            {action}
+            <ToastClose />
+          </Toast>
+        )
+      })}
+      <ToastViewport />
+    </ToastProvider>
+  )
+}
+</file>
+
+<file path="src/components/ui/use-toast.ts">
+// Inspired by react-hot-toast library
+import * as React from "react"
+
+import type {
+  ToastActionElement,
+  ToastProps,
+} from "@/components/ui/toast"
+
+const TOAST_LIMIT = 1
+const TOAST_REMOVE_DELAY = 1000000
+
+type ToasterToast = ToastProps & {
+  id: string
+  title?: React.ReactNode
+  description?: React.ReactNode
+  action?: ToastActionElement
+}
+
+const actionTypes = {
+  ADD_TOAST: "ADD_TOAST",
+  UPDATE_TOAST: "UPDATE_TOAST",
+  DISMISS_TOAST: "DISMISS_TOAST",
+  REMOVE_TOAST: "REMOVE_TOAST",
+} as const
+
+let count = 0
+
+function genId() {
+  count = (count + 1) % 100
+  return count.toString()
+}
+
+type ActionType = typeof actionTypes
+
+type Action =
+  | {
+      type: ActionType["ADD_TOAST"]
+      toast: ToasterToast
+    }
+  | {
+      type: ActionType["UPDATE_TOAST"]
+      toast: Partial<ToasterToast>
+    }
+  | {
+      type: ActionType["DISMISS_TOAST"]
+      toastId?: ToasterToast["id"]
+    }
+  | {
+      type: ActionType["REMOVE_TOAST"]
+      toastId?: ToasterToast["id"]
+    }
+
+interface State {
+  toasts: ToasterToast[]
+}
+
+const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>()
+
+const addToRemoveQueue = (toastId: string) => {
+  if (toastTimeouts.has(toastId)) {
+    return
+  }
+
+  const timeout = setTimeout(() => {
+    toastTimeouts.delete(toastId)
+    dispatch({
+      type: "REMOVE_TOAST",
+      toastId: toastId,
+    })
+  }, TOAST_REMOVE_DELAY)
+
+  toastTimeouts.set(toastId, timeout)
+}
+
+export const reducer = (state: State, action: Action): State => {
+  switch (action.type) {
+    case "ADD_TOAST":
+      return {
+        ...state,
+        toasts: [action.toast, ...state.toasts].slice(0, TOAST_LIMIT),
+      }
+
+    case "UPDATE_TOAST":
+      return {
+        ...state,
+        toasts: state.toasts.map((t) =>
+          t.id === action.toast.id ? { ...t, ...action.toast } : t
+        ),
+      }
+
+    case "DISMISS_TOAST": {
+      const { toastId } = action
+
+      // ! Side effects ! - This could be extracted into a dismissToast() action,
+      // but I'll keep it here for simplicity
+      if (toastId) {
+        addToRemoveQueue(toastId)
+      } else {
+        state.toasts.forEach((toast) => {
+          addToRemoveQueue(toast.id)
+        })
+      }
+
+      return {
+        ...state,
+        toasts: state.toasts.map((t) =>
+          t.id === toastId || toastId === undefined
+            ? {
+                ...t,
+                open: false,
+              }
+            : t
+        ),
+      }
+    }
+    case "REMOVE_TOAST":
+      if (action.toastId === undefined) {
+        return {
+          ...state,
+          toasts: [],
+        }
+      }
+      return {
+        ...state,
+        toasts: state.toasts.filter((t) => t.id !== action.toastId),
+      }
+  }
+}
+
+const listeners: Array<(state: State) => void> = []
+
+let memoState: State = { toasts: [] }
+
+function dispatch(action: Action) {
+  memoState = reducer(memoState, action)
+  listeners.forEach((listener) => {
+    listener(memoState)
+  })
+}
+
+type Toast = Omit<ToasterToast, "id">
+
+function toast(props: Toast) {
+  const id = genId()
+
+  const update = (props: ToasterToast) =>
+    dispatch({
+      type: "UPDATE_TOAST",
+      toast: { ...props, id },
+    })
+  const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id })
+
+  dispatch({
+    type: "ADD_TOAST",
+    toast: {
+      ...props,
+      id,
+      open: true,
+      onOpenChange: (open) => {
+        if (!open) dismiss()
+      },
+    },
+  })
+
+  return {
+    id: id,
+    dismiss,
+    update,
+  }
+}
+
+function useToast() {
+  // Always initialize with a static, empty state on both server and client
+  // to prevent a hydration mismatch.
+  const [state, setState] = React.useState<State>({ toasts: [] });
+
+  React.useEffect(() => {
+    // On the client, after the initial render, subscribe to the listeners.
+    listeners.push(setState);
+    // We also need to sync with the current memoState in case a toast was
+    // dispatched between module load and this effect running.
+    setState(memoState);
+
+    // Return a cleanup function to unsubscribe.
+    return () => {
+      const index = listeners.indexOf(setState);
+      if (index > -1) {
+        listeners.splice(index, 1);
+      }
+    };
+  }, []);
+
+  const dismiss = React.useCallback(
+    (toastId?: string) => dispatch({ type: "DISMISS_TOAST", toastId }),
+    []
+  );
+
+  return {
+    ...state,
+    toast,
+    dismiss,
+  };
+}
+
+export { useToast, toast }
+</file>
+
+<file path="src/components/IOSInstallPrompt.tsx">
+"use client";
+
+import { useState, useEffect } from "react";
+import { X, Share, PlusSquare, Smartphone } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Analytics } from "@/lib/analytics";
+
+interface BeforeInstallPromptEvent extends Event {
+  readonly platforms: Array<string>;
+  readonly userChoice: Promise<{
+    outcome: 'accepted' | 'dismissed',
+    platform: string
+  }>;
+  prompt(): Promise<void>;
+}
+
+export default function InstallPrompt() {
+  const [installPromptEvent, setInstallPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
+  const [showIosPrompt, setShowIosPrompt] = useState(false);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (event: Event) => {
+      event.preventDefault();
+      setInstallPromptEvent(event as BeforeInstallPromptEvent);
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+
+    const hasSeenPrompt = localStorage.getItem('pwa-prompt-seen');
+    if (!hasSeenPrompt) {
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+
+      if (isIOS && !isStandalone) {
+        const timer = setTimeout(() => setShowIosPrompt(true), 5000);
+        return () => {
+          clearTimeout(timer);
+          window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+        };
+      }
+    }
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (showIosPrompt) {
+      const timer = setTimeout(() => {
+        setShowIosPrompt(false);
+        localStorage.setItem('pwa-prompt-seen', 'true');
+      }, 12000);
+      return () => clearTimeout(timer);
+    }
+  }, [showIosPrompt]);
+
+  const handleInstallClick = () => {
+    if (installPromptEvent) {
+      Analytics.pwaInstalled().catch(()=>{});
+      installPromptEvent.prompt();
+      installPromptEvent.userChoice.then(() => {
+        setInstallPromptEvent(null);
+        localStorage.setItem('pwa-prompt-seen', 'true');
+      });
+    }
+  };
+
+  const handleClose = () => {
+    setShowIosPrompt(false);
+    setInstallPromptEvent(null);
+    localStorage.setItem('pwa-prompt-seen', 'true');
+  };
+
+  if (installPromptEvent) {
+    return (
+      <div className="fixed bottom-6 left-4 right-4 z-[100] animate-in fade-in slide-in-from-bottom-10">
+        <div className="bg-slate-900 rounded-2xl p-4 shadow-2xl border-2 border-blue-500/20 relative">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-2 right-2 h-8 w-8 text-white/40"
+            onClick={handleClose}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+          <div className="flex items-center gap-4">
+            <div className="bg-blue-600 p-2 rounded-xl shrink-0">
+              <Smartphone className="text-white h-6 w-6" />
+            </div>
+            <div className="flex-grow">
+              <h3 className="font-bold text-sm text-white">Installa Social Parking</h3>
+              <p className="text-xs text-white/50 mt-1">
+                Accedi più velocemente e attiva le notifiche.
+              </p>
+            </div>
+            <Button
+              onClick={handleInstallClick}
+              className="ml-2 font-bold bg-blue-600 hover:bg-blue-700 text-white shrink-0 rounded-xl"
+            >
+              Installa
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (showIosPrompt) {
+    return (
+      <div className="fixed bottom-6 left-4 right-4 z-[100] animate-in fade-in slide-in-from-bottom-10">
+        <div className="bg-slate-900 rounded-2xl p-5 shadow-2xl border-2 border-white/10 relative text-white">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-2 right-2 h-8 w-8 text-white/50"
+            onClick={handleClose}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+          <div className="flex items-start gap-4 pr-6">
+            <div className="bg-blue-600 p-2 rounded-xl shrink-0">
+              <PlusSquare className="text-white h-6 w-6" />
+            </div>
+            <div>
+              <h3 className="font-bold text-sm">Installa su iPhone</h3>
+              <p className="text-xs text-white/70 mt-1 leading-relaxed">
+                Per attivare le notifiche, tocca{' '}
+                <Share className="inline h-4 w-4 mx-1 text-blue-400" />{' '}
+                e poi seleziona{' '}
+                <span className="font-bold text-white">"Aggiungi alla schermata Home"</span>.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[12px] border-t-slate-900 mx-auto drop-shadow-md" />
+      </div>
+    );
+  }
+
+  return null;
+}
+</file>
+
+<file path="src/components/Map.tsx">
+'use client';
+
+/**
+ * @fileOverview Componente Mappa per Social Parking Italia - Versione 2.5 Stable.
+ */
+
+import { useState, useEffect, forwardRef, useMemo } from 'react';
+import { Map as ReactMapGL, Marker, MapRef, Source, Layer } from 'react-map-gl';
+import { Circle } from 'lucide-react';
+
+const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+
+type MapProps = {
+  viewState: any;
+  setViewState: (viewState: any) => void;
+  userLocation: { latitude: number; longitude: number; heading: number | null } | null;
+  mapParkingSpots: any[];
+  navigationTarget?: { latitude: number; longitude: number } | null;
+};
+
+const Map = forwardRef<MapRef, MapProps>(({
+  viewState,
+  setViewState,
+  userLocation,
+  mapParkingSpots,
+  navigationTarget,
+}, ref) => {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  const routeGeoJSON = useMemo(() => {
+    if (!userLocation || !navigationTarget || !userLocation.longitude || !userLocation.latitude) return null;
+    return {
+      type: 'Feature',
+      properties: {},
+      geometry: {
+        type: 'LineString',
+        coordinates: [
+          [userLocation.longitude, userLocation.latitude],
+          [navigationTarget.longitude, navigationTarget.latitude],
+        ],
+      },
+    };
+  }, [userLocation, navigationTarget]);
+
+  if (!MAPBOX_TOKEN) return <div className="h-screen w-screen bg-muted flex items-center justify-center text-white font-bold p-10 text-center">CONFIGURA IL TOKEN MAPBOX NELLE VARIABILI D'AMBIENTE</div>;
+  if (!isClient) return <div className="h-screen w-screen bg-muted" />;
+
+  return (
+    <ReactMapGL
+      ref={ref}
+      mapboxAccessToken={MAPBOX_TOKEN}
+      {...viewState}
+      style={{ width: '100%', height: '100%' }}
+      mapStyle="mapbox://styles/mapbox/streets-v11"
+      onMove={(evt) => setViewState(evt.viewState)}
+    >
+      {userLocation && (
+        <Marker
+          latitude={userLocation.latitude}
+          longitude={userLocation.longitude}
+          anchor="center"
+        >
+          <div className="relative group">
+            <div className="absolute inset-0 bg-blue-500/30 rounded-full animate-ping" />
+            <div 
+              className="h-10 w-10 rounded-full border-4 border-white bg-blue-600 shadow-2xl relative z-10 flex items-center justify-center transition-transform duration-300"
+              style={{ transform: `rotate(${userLocation.heading || 0}deg)` }}
+            >
+              <div className="w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[14px] border-b-white mb-1" />
+            </div>
+          </div>
+        </Marker>
+      )}
+
+      {routeGeoJSON && (
+        <Source type="geojson" data={routeGeoJSON as any}>
+          <Layer
+            id="route"
+            type="line"
+            layout={{ 'line-join': 'round', 'line-cap': 'round' }}
+            paint={{ 'line-color': '#f97316', 'line-width': 6, 'line-dasharray': [1, 2] }}
+          />
+        </Source>
+      )}
+
+      {Array.isArray(mapParkingSpots) && mapParkingSpots.map((spot: any) => {
+        const isBooked = spot.status === 'in arrivo';
+        const iconColor = isBooked ? 'text-orange-500' : 'text-green-500';
+        return (
+          <Marker
+            key={spot.id}
+            latitude={spot.latitude}
+            longitude={spot.longitude}
+            anchor="center"
+          >
+            <div className={`relative flex items-center justify-center ${iconColor} drop-shadow-xl cursor-pointer transition-transform hover:scale-110`}>
+              <Circle size={48} strokeWidth={3} />
+              <span className="absolute font-black text-xl mb-0.5">P</span>
+            </div>
+          </Marker>
+        )
+      })}
+    </ReactMapGL>
+  );
+});
+
+Map.displayName = 'Map';
+
+export default Map;
+</file>
+
+<file path="src/components/ServiceWorkerSetup.tsx">
+'use client';
+
+import { useEffect } from 'react';
+import { useFirestore } from '@/firebase/provider';
+import { useUser } from '@/firebase/auth/use-user';
+import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+
+/**
+ * Registra il Service Worker e gestisce il rinnovo automatico
+ * della push subscription (evento pushsubscriptionchange).
+ * Questo è critico su iOS dove le subscription scadono periodicamente.
+ */
+export default function ServiceWorkerSetup() {
+  const firestore = useFirestore();
+  const { user: currentUser } = useUser();
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return;
+
+    const registerSW = async () => {
+      try {
+        const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+        console.log('[SW] Registrato con scope:', registration.scope);
+      } catch (err) {
+        console.error('[SW] Registrazione fallita:', err);
+      }
+    };
+
+    if (document.readyState === 'complete') {
+      registerSW();
+    } else {
+      window.addEventListener('load', registerSW);
+      return () => window.removeEventListener('load', registerSW);
+    }
+  }, []);
+
+  // Ascolta il messaggio PUSH_SUBSCRIPTION_RENEWED dal SW
+  // e aggiorna la subscription su Firestore automaticamente
+  useEffect(() => {
+    if (!('serviceWorker' in navigator) || !currentUser || !firestore) return;
+
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'PUSH_SUBSCRIPTION_RENEWED') {
+        console.log('[SW] Push subscription rinnovata, aggiorno Firestore...');
+        updateDocumentNonBlocking(firestore, `users/${currentUser.uid}`, {
+          pushSubscription: event.data.subscription
+        });
+      }
+    };
+
+    navigator.serviceWorker.addEventListener('message', handleMessage);
+    return () => navigator.serviceWorker.removeEventListener('message', handleMessage);
+  }, [currentUser, firestore]);
+
+  return null;
+}
+</file>
+
+<file path="src/firebase/auth/use-user.tsx">
+'use client';
+
+import { useState, useEffect } from 'react';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { useAuth } from '@/firebase/provider';
+
+export function useUser() {
+  const auth = useAuth();
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // If the auth service isn't ready, we are still loading and can't do anything.
+    if (!auth) {
+      return;
+    }
+
+    // Auth service is ready, set up the listener.
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      // When the auth state is resolved (either with a user or null),
+      // update the user state and set loading to false.
+      setUser(user);
+      setLoading(false);
+    });
+
+    // Clean up the listener on unmount.
+    return () => unsubscribe();
+  }, [auth]); // This effect depends on the auth service becoming available.
+
+  return { user, loading };
+}
+</file>
+
+<file path="src/firebase/firestore/use-collection.tsx">
+'use client';
+import {
+  collection,
+  onSnapshot,
+  query,
+  where,
+  Query,
+  DocumentData,
+  FirestoreError,
+  QuerySnapshot,
+} from 'firebase/firestore';
+import { useEffect, useState } from 'react';
+import { useFirestore } from '@/firebase/provider';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
+
+export function useCollection<T>(
+  path: string | null,
+  options?: {
+    where?: [string, '==', any];
+  }
+) {
+  const firestore = useFirestore();
+  const [data, setData] = useState<T[] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<FirestoreError | null>(null);
+
+  const whereCondition = JSON.stringify(options?.where);
+
+  useEffect(() => {
+    // Wait for the Firebase instance to be ready.
+    // On the server and initial client render, `firestore` will be null.
+    // By returning here, we remain in the initial `loading: true` state,
+    // preventing a hydration mismatch.
+    if (!firestore) {
+      return;
+    }
+
+    // If the path is null, we are explicitly told not to fetch.
+    // In this case, we are not loading and there is no data.
+    if (!path) {
+      setData(null);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
+    // We have a path and firestore, so we are fetching.
+    setLoading(true);
+
+    let q: Query<DocumentData> = collection(firestore, path);
+    if (options?.where) {
+      q = query(q, where(...options.where));
+    }
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot: QuerySnapshot<DocumentData>) => {
+        const docs = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })) as T[];
+        setData(docs);
+        setLoading(false);
+        setError(null);
+      },
+      (err: FirestoreError) => {
+        setError(err);
+        setData(null);
+        setLoading(false);
+        const permissionError = new FirestorePermissionError({
+            path: path,
+            operation: 'list',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      }
+    );
+
+    return () => unsubscribe();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [firestore, path, whereCondition]);
+
+  return { data, loading, error };
+}
+</file>
+
+<file path="src/firebase/firestore/use-doc.tsx">
+'use client';
+import {
+  doc,
+  onSnapshot,
+  DocumentData,
+  FirestoreError,
+  DocumentSnapshot,
+} from 'firebase/firestore';
+import { useEffect, useState } from 'react';
+import { useFirestore } from '@/firebase/provider';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
+
+export function useDoc<T>(path: string | null) {
+  const firestore = useFirestore();
+  const [data, setData] = useState<T | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<FirestoreError | null>(null);
+
+  useEffect(() => {
+    // Wait for the Firebase instance to be ready.
+    // On the server and initial client render, `firestore` will be null.
+    // By returning here, we remain in the initial `loading: true` state,
+    // preventing a hydration mismatch.
+    if (!firestore) {
+      return;
+    }
+
+    // If the path is null, we are explicitly told not to fetch.
+    // In this case, we are not loading and there is no data.
+    if (!path) {
+      setData(null);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+    
+    // We have a path and firestore, so we are fetching.
+    setLoading(true);
+
+    const docRef = doc(firestore, path);
+
+    const unsubscribe = onSnapshot(
+      docRef,
+      (snapshot: DocumentSnapshot<DocumentData>) => {
+        if (snapshot.exists()) {
+          setData({ ...snapshot.data(), id: snapshot.id } as T);
+        } else {
+          setData(null); // Document doesn't exist
+        }
+        setLoading(false);
+        setError(null);
+      },
+      (err: FirestoreError) => {
+        setError(err);
+        setData(null);
+        setLoading(false);
+        const permissionError = new FirestorePermissionError({
+            path: path,
+            operation: 'get',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [firestore, path]);
+
+  return { data, loading, error };
+}
+</file>
+
+<file path="src/firebase/client-provider.tsx">
+'use client';
+import { ReactNode, useEffect, useState } from 'react';
+import { FirebaseApp, getApps, initializeApp } from 'firebase/app';
+import { Auth, getAuth } from 'firebase/auth';
+import { Firestore, getFirestore } from 'firebase/firestore';
+import { Messaging, getMessaging } from 'firebase/messaging';
+
+import { FirebaseProvider } from '@/firebase/provider';
+import { firebaseConfig } from '@/firebase/config';
+
+interface FirebaseInstances {
+  app: FirebaseApp | null;
+  auth: Auth | null;
+  firestore: Firestore | null;
+  messaging: Messaging | null;
+}
+
+export function FirebaseClientProvider({ children }: { children: ReactNode }) {
+  const [instances, setInstances] = useState<FirebaseInstances>({
+    app: null,
+    auth: null,
+    firestore: null,
+    messaging: null,
+  });
+
+  useEffect(() => {
+    // Assicura l'inizializzazione solo sul client
+    if (typeof window === 'undefined') return;
+
+    try {
+      const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+      const auth = getAuth(app);
+      const firestore = getFirestore(app);
+      
+      let messaging: Messaging | null = null;
+      if ('serviceWorker' in navigator) {
+        try {
+          messaging = getMessaging(app);
+        } catch (e) {
+          console.warn('Firebase Messaging not supported or blocked in this environment');
+        }
+      }
+      
+      setInstances({ app, auth, firestore, messaging });
+    } catch (error) {
+      console.error('Firebase initialization error:', error);
+    }
+  }, []);
+
+  return (
+    <FirebaseProvider
+      app={instances.app}
+      auth={instances.auth}
+      firestore={instances.firestore}
+      messaging={instances.messaging}
+    >
+      {children}
+    </FirebaseProvider>
+  );
+}
+</file>
+
+<file path="src/firebase/config.ts">
+import { initializeApp, getApps } from 'firebase/app';
+
+/**
+ * @fileOverview Configurazione Firebase e chiavi VAPID per notifiche push.
+ */
+
+export const firebaseConfig = {
+  apiKey: "AIzaSyCcaJI-Ab6wKbk8_C9BckHf5JXblK8aLQs",
+  authDomain: "studio-6366379090-251c5.firebaseapp.com",
+  projectId: "studio-6366379090-251c5",
+  storageBucket: "studio-6366379090-251c5.firebasestorage.app",
+  messagingSenderId: "898470092455",
+  appId: "1:898470092455:web:8a65404f01381d2d660582"
+};
+
+// Chiave VAPID URL-Safe per la sottoscrizione push fornita dall'utente
+export const VAPID_PUBLIC_KEY = "BBrXf7IR6V3uDqZ8mrHOTYMTYSa_3w4fcnCF3arkcsW2ae8docYjP23mhEzlhg5hFMbB8LEt2UBhVztUh_6Sc04";
+
+// Esporta l'istanza dell'app per l'uso globale (es. Analytics)
+export const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+</file>
+
+<file path="src/firebase/error-emitter.ts">
+type Listener = (event: any) => void;
+
+class EventEmitter {
+  private listeners: { [key: string]: Listener[] } = {};
+
+  on(event: string, listener: Listener): () => void {
+    if (!this.listeners[event]) {
+      this.listeners[event] = [];
+    }
+    this.listeners[event].push(listener);
+    return () => this.off(event, listener);
+  }
+
+  off(event: string, listener: Listener): void {
+    if (!this.listeners[event]) return;
+    this.listeners[event] = this.listeners[event].filter(l => l !== listener);
+  }
+
+  emit(event: string, data: any): void {
+    if (!this.listeners[event]) return;
+    this.listeners[event].forEach(listener => listener(data));
+  }
+}
+
+export const errorEmitter = new EventEmitter();
+</file>
+
+<file path="src/firebase/errors.ts">
+export type SecurityRuleContext = {
+    path: string;
+    operation: 'get' | 'list' | 'create' | 'update' | 'delete';
+    requestResourceData?: any;
+  };
+  
+  export class FirestorePermissionError extends Error {
+    constructor(public context: SecurityRuleContext) {
+      super(`FirestoreError: Missing or insufficient permissions.`);
+      this.name = 'FirestorePermissionError';
+      this.message = `${this.message} The following request was denied by Firestore Security Rules:\n${JSON.stringify(this.context, null, 2)}`;
+    }
+  }
+</file>
+
+<file path="src/firebase/index.ts">
+'use client';
+
+/**
+ * @fileOverview Barrel file centrale per le funzionalità Firebase.
+ * Esporta hook, provider e utility per garantire una risoluzione coerente dei moduli.
+ */
+
+export { FirebaseProvider, useFirebaseApp, useFirestore, useAuth, useMessaging } from './provider';
+export { FirebaseClientProvider } from './client-provider';
+export { useCollection } from './firestore/use-collection';
+export { useDoc } from './firestore/use-doc';
+export { useUser } from './auth/use-user';
+export { 
+  updateDocumentNonBlocking, 
+  addDocumentNonBlocking, 
+  deleteDocumentNonBlocking, 
+  setDocumentNonBlocking,
+  serverTimestamp 
+} from './non-blocking-updates';
+</file>
+
+<file path="src/firebase/non-blocking-updates.ts">
+'use client';
+import {
+  doc,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  addDoc,
+  collection,
+  DocumentReference,
+  CollectionReference,
+  SetOptions,
+  Firestore,
+  serverTimestamp as firebaseServerTimestamp,
+} from 'firebase/firestore';
+import { errorEmitter } from './error-emitter';
+import { FirestorePermissionError } from './errors';
+
+export const serverTimestamp = firebaseServerTimestamp;
+
+export function setDocumentNonBlocking(
+  firestore: Firestore,
+  path: string,
+  data: any,
+  options: SetOptions = {}
+) {
+  const ref = doc(firestore, path);
+  setDoc(ref, data, options).catch(serverError => {
+    const permissionError = new FirestorePermissionError({
+      path: ref.path,
+      operation: 'merge' in options && options.merge ? 'update' : 'create',
+      requestResourceData: data,
+    });
+    errorEmitter.emit('permission-error', permissionError);
+  });
+}
+
+export function addDocumentNonBlocking(
+    ref: CollectionReference,
+    data: any,
+  ) {
+    addDoc(ref, data).catch(serverError => {
+      const permissionError = new FirestorePermissionError({
+        path: ref.path,
+        operation: 'create',
+        requestResourceData: data,
+      });
+      errorEmitter.emit('permission-error', permissionError);
+    });
+  }
+
+export function updateDocumentNonBlocking(
+  firestore: Firestore,
+  path: string,
+  data: any
+) {
+  const ref = doc(firestore, path);
+  updateDoc(ref, data).catch(serverError => {
+    const permissionError = new FirestorePermissionError({
+      path: ref.path,
+      operation: 'update',
+      requestResourceData: data,
+    });
+    errorEmitter.emit('permission-error', permissionError);
+  });
+}
+
+export function deleteDocumentNonBlocking(
+  firestore: Firestore,
+  path: string
+) {
+  const ref = doc(firestore, path);
+  deleteDoc(ref).catch(serverError => {
+    const permissionError = new FirestorePermissionError({
+      path: ref.path,
+      operation: 'delete',
+    });
+    errorEmitter.emit('permission-error', permissionError);
+  });
+}
+</file>
+
+<file path="src/firebase/provider.tsx">
+'use client';
+import { createContext, useContext, ReactNode } from 'react';
+import { FirebaseApp } from 'firebase/app';
+import { Auth } from 'firebase/auth';
+import { Firestore } from 'firebase/firestore';
+import { Messaging } from 'firebase/messaging';
+
+interface FirebaseContextValue {
+  app: FirebaseApp | null;
+  auth: Auth | null;
+  firestore: Firestore | null;
+  messaging: Messaging | null;
+}
+
+const FirebaseContext = createContext<FirebaseContextValue>({
+  app: null,
+  auth: null,
+  firestore: null,
+  messaging: null,
+});
+
+export const useFirebaseApp = () => {
+  return useContext(FirebaseContext).app;
+};
+
+export const useAuth = () => {
+  return useContext(FirebaseContext).auth;
+};
+
+export const useFirestore = () => {
+  return useContext(FirebaseContext).firestore;
+};
+
+export const useMessaging = () => {
+  return useContext(FirebaseContext).messaging;
+};
+
+
+export function FirebaseProvider({
+  children,
+  app,
+  auth,
+  firestore,
+  messaging,
+}: {
+  children: ReactNode;
+  app: FirebaseApp | null;
+  auth: Auth | null;
+  firestore: Firestore | null;
+  messaging: Messaging | null;
+}) {
+  return (
+    <FirebaseContext.Provider value={{ app, auth, firestore, messaging }}>
+      {children}
+    </FirebaseContext.Provider>
+  );
+}
+</file>
+
+<file path="src/hooks/use-audio.tsx">
+"use client";
+
+import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react';
+
+type AudioType = 'notification' | 'booking' | 'cancellation' | 'directions';
+
+const audioFiles: Record<AudioType, string> = {
+  notification: 'https://assets.mixkit.co/sfx/preview/mixkit-correct-answer-tone-2870.mp3',
+  booking: 'https://assets.mixkit.co/sfx/preview/mixkit-modern-technology-select-3069.mp3',
+  cancellation: 'https://assets.mixkit.co/sfx/preview/mixkit-game-show-wrong-answer-2550.mp3',
+  directions: 'https://assets.mixkit.co/sfx/preview/mixkit-interface-hint-notification-911.mp3',
+};
+
+interface AudioContextType {
+  playSound: (type: AudioType) => void;
+}
+
+const AudioSystemContext = createContext<AudioContextType | undefined>(undefined);
+
+export const AudioProvider = ({ children }: { children: ReactNode }) => {
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    setIsReady(true);
+    
+    const unlockAudio = () => {
+      if (typeof window !== 'undefined') {
+        const AudioContextClass = (window as any).AudioContext || (window as any).webkitAudioContext;
+        if (AudioContextClass) {
+          const ctx = new AudioContextClass();
+          if (ctx.state === 'suspended') {
+            ctx.resume();
+          }
+        }
+        window.removeEventListener('click', unlockAudio);
+        window.removeEventListener('touchstart', unlockAudio);
+      }
+    };
+
+    window.addEventListener('click', unlockAudio);
+    window.addEventListener('touchstart', unlockAudio);
+    
+    return () => {
+        window.removeEventListener('click', unlockAudio);
+        window.removeEventListener('touchstart', unlockAudio);
+    };
+  }, []);
+
+  const playSound = (type: AudioType) => {
+    if (typeof window === 'undefined' || !isReady) return;
+    try {
+      const audio = new Audio(audioFiles[type]);
+      audio.volume = 1.0;
+      audio.play().catch(error => {
+        console.warn(`Audio play for "${type}" prevented:`, error);
+      });
+    } catch (error) {
+      console.error(`Failed to play sound "${type}":`, error);
+    }
+  };
+
+  return (
+    <AudioSystemContext.Provider value={{ playSound }}>
+      {children}
+    </AudioSystemContext.Provider>
+  );
+};
+
+export const useAudio = () => {
+  const context = useContext(AudioSystemContext);
+  if (context === undefined) {
+    throw new Error('useAudio must be used within an AudioProvider');
+  }
+  return context;
+};
+</file>
+
+<file path="src/hooks/use-gps.ts">
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { GPS_UPDATE_THRESHOLD_M } from '@/lib/constants';
+import { getHaversineDistance } from '@/lib/utils';
+
+export interface UserLocation {
+  latitude: number;
+  longitude: number;
+  heading: number | null;
+}
+
+/**
+ * Hook per la gestione della geolocalizzazione GPS.
+ * Gestisce l'aggiornamento della posizione e il throttling basato sulla distanza.
+ */
+export function useGps(onLocationUpdate?: (loc: UserLocation) => void) {
+  const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
+  const watchId = useRef<number | null>(null);
+  const hasInitialCentered = useRef(false);
+  const lastSavedLocation = useRef<UserLocation | null>(null);
+
+  const startGps = useCallback(() => {
+    if (typeof window === 'undefined' || !navigator.geolocation) return;
+
+    const onSuccess = (pos: GeolocationPosition) => {
+      const { latitude, longitude, heading } = pos.coords;
+      const loc: UserLocation = { latitude, longitude, heading };
+      setUserLocation(loc);
+
+      const dist = lastSavedLocation.current
+        ? getHaversineDistance(loc, lastSavedLocation.current)
+        : Infinity;
+
+      // Aggiorna solo se ci si è spostati di almeno X metri o se è la prima acquisizione
+      if (dist >= GPS_UPDATE_THRESHOLD_M || !lastSavedLocation.current) {
+        lastSavedLocation.current = loc;
+        onLocationUpdate?.(loc);
+      }
+    };
+
+    const options = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };
+    
+    // Acquisizione iniziale veloce
+    navigator.geolocation.getCurrentPosition(onSuccess, () => {
+      navigator.geolocation.getCurrentPosition(onSuccess, null, { enableHighAccuracy: false });
+    }, options);
+
+    // Monitoraggio continuo
+    watchId.current = window.navigator.geolocation.watchPosition(onSuccess, null, options);
+  }, [onLocationUpdate]);
+
+  useEffect(() => {
+    return () => {
+      if (watchId.current !== null) navigator.geolocation.clearWatch(watchId.current);
+    };
+  }, []);
+
+  return { userLocation, startGps, hasInitialCentered };
+}
+</file>
+
+<file path="src/hooks/use-push-subscription.ts">
+import { useCallback } from 'react';
+import { VAPID_PUBLIC_KEY } from '@/firebase/config';
+import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { Analytics } from '@/lib/analytics';
+
+/**
+ * Hook per la gestione della sottoscrizione alle notifiche Push Web.
+ * Gestisce i permessi e la registrazione del service worker.
+ */
+export function usePushSubscription(
+  firestore: any,
+  userId: string | undefined
+) {
+  const ensurePushSubscription = useCallback(async () => {
+    if (!('Notification' in window) || !userId || !firestore) return;
+    
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      let subscription = await registration.pushManager.getSubscription();
+
+      if (!subscription && Notification.permission !== 'denied') {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+          Analytics.notifPermissionGranted().catch(() => {});
+          subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: VAPID_PUBLIC_KEY,
+          });
+        } else if (permission === 'denied') {
+          Analytics.notifPermissionDenied().catch(() => {});
+        }
+      }
+
+      if (subscription) {
+        updateDocumentNonBlocking(firestore, `users/${userId}`, {
+          pushSubscription: subscription.toJSON(),
+        });
+      }
+      return subscription;
+    } catch (e) {
+      console.warn('Push subscription error:', e);
+      return null;
+    }
+  }, [firestore, userId]);
+
+  return { ensurePushSubscription };
+}
+</file>
+
+<file path="src/lib/analytics.ts">
+import { getAnalytics, logEvent, isSupported } from 'firebase/analytics';
+import { app } from '@/firebase/config';
+
+/**
+ * @fileOverview Utility per il tracciamento degli eventi con Firebase Analytics.
+ */
+
+let analyticsInstance: any = null;
+
+async function getAnalyticsInstance() {
+  if (typeof window === 'undefined') return null;
+  if (analyticsInstance) return analyticsInstance;
+  
+  const supported = await isSupported();
+  if (supported) {
+    analyticsInstance = getAnalytics(app);
+  }
+  return analyticsInstance;
+}
+
+export async function trackEvent(name: string, params?: Record<string, any>) {
+  try {
+    const analytics = await getAnalyticsInstance();
+    if (analytics) {
+      logEvent(analytics, name, params);
+    }
+  } catch (e) {
+    // Analytics non critico, fail silenzioso
+    console.warn('Analytics event failed:', name, e);
+  }
+}
+
+/**
+ * Eventi predefiniti mappati sulle azioni chiave dell'utente.
+ */
+export const Analytics = {
+  onboardingCompleted: () => trackEvent('onboarding_completed'),
+  parkingFreed: (streak: number) => trackEvent('parking_freed', { streak }),
+  parkingBooked: () => trackEvent('parking_booked'),
+  bookingCancelled: () => trackEvent('booking_cancelled'),
+  searchToggled: (on: boolean) => trackEvent('search_toggled', { enabled: on }),
+  notifPermissionGranted: () => trackEvent('notification_permission_granted'),
+  notifPermissionDenied: () => trackEvent('notification_permission_denied'),
+  shareTriggered: (context: 'freed' | 'found') => trackEvent('share_triggered', { context }),
+  pwaInstalled: () => trackEvent('pwa_installed'),
+};
+</file>
+
+<file path="src/lib/constants.ts">
+/**
+ * @fileOverview Costanti globali dell'applicazione Social Parking.
+ * Centralizzare qui i "magic numbers" per facilitare la manutenzione.
+ */
+
+/** Durata validità di un parcheggio/prenotazione in millisecondi (default: 3 minuti) */
+export const PARKING_EXPIRY_MS = 3 * 60 * 1000; // 180_000
+
+/** Durata in secondi, usata per il calcolo del progresso nel CountdownTimer */
+export const PARKING_EXPIRY_SECS = PARKING_EXPIRY_MS / 1000; // 180
+
+/** Soglia minima in metri per aggiornare la posizione GPS su Firestore */
+export const GPS_UPDATE_THRESHOLD_M = 10;
+
+/** Throttle minimo in ms tra due chiamate notifyNearby consecutive */
+export const NOTIFY_THROTTLE_MS = 30_000;
+
+/** Raggio in metri per la ricerca parcheggi nella lista */
+export const NEARBY_SEARCH_RADIUS_M = 5_000;
+
+/** Raggio in metri per le notifiche push ai cercatori vicini */
+export const NOTIFY_RADIUS_M = 200;
+</file>
+
+<file path="src/lib/utils.ts">
+import { type ClassValue, clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+
+/**
+ * Calcola la distanza tra due coordinate usando la formula di Haversine.
+ * @returns Distanza in metri.
+ */
+export function getHaversineDistance(
+  coords1: { latitude: number; longitude: number } | null,
+  coords2: { latitude: number; longitude: number } | null
+): number {
+  if (!coords1 || !coords2) return Infinity;
+
+  const toRad = (x: number) => (x * Math.PI) / 180;
+  const R = 6371e3;
+  const dLat = toRad(coords2.latitude - coords1.latitude);
+  const dLon = toRad(coords2.longitude - coords1.longitude);
+  const lat1 = toRad(coords1.latitude);
+  const lat2 = toRad(coords2.latitude);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+/**
+ * Genera un codice alfanumerico di N caratteri non ambigui.
+ * Esclude 0, O, I, 1 per evitare errori di lettura umana.
+ * Usa crypto.getRandomValues() — crittograficamente sicuro.
+ */
+export function generateBookingCode(length = 4): string {
+  const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+  const randomValues = new Uint32Array(length);
+  crypto.getRandomValues(randomValues);
+  return Array.from(randomValues, (val) => chars[val % chars.length]).join('');
+}
+</file>
+
+<file path=".firebaserc">
+{
+  "projects": {
+    "default": "studio-6366379090-251c5"
+  },
+  "targets": {
+    "studio-6366379090-251c5": {
+      "hosting": {
+        "social-park-alias": [
+          "social-parking.web.app"
+        ],
+        "social-parking": [
+          "social-parking"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
+</file>
+
+<file path=".gitignore">
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+.genkit/*
+.env*
+
+# firebase
+firebase-debug.log
+firestore-debug.log
+</file>
+
+<file path=".modified">
+
+</file>
+
+<file path="apphosting.yaml">
+# Configurazione per Firebase App Hosting (Supporto nativo Next.js con Server Actions)
+runConfig:
+  maxInstances: 2
+  memory: 512Mi
+</file>
+
+<file path="components.json">
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "default",
+  "rsc": true,
+  "tsx": true,
+  "tailwind": {
+    "config": "tailwind.config.ts",
+    "css": "src/app/globals.css",
+    "baseColor": "neutral",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "aliases": {
+    "components": "@/components",
+    "utils": "@/lib/utils",
+    "ui": "@/components/ui",
+    "lib": "@/lib",
+    "hooks": "@/hooks"
+  },
+  "iconLibrary": "lucide"
+}
+</file>
+
+<file path="firebase.json">
+{
+  "hosting": {
+    "public": "out",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      { "source": "**", "destination": "/index.html" }
+    ]
+  }
+}
+</file>
+
+<file path="firestore.rules">
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Funzioni helper per la sicurezza
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    function isFieldImmutable(field) {
+      return !(field in request.resource.data) || request.resource.data[field] == resource.data[field];
+    }
+    
+    function isValidLat(lat) {
+      return lat >= -90 && lat <= 90;
+    }
+    
+    function isValidLon(lon) {
+      return lon >= -180 && lon <= 180;
+    }
+
+    // --- COLLECTION USERS ---
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false; // Disabilitato il listing degli utenti per privacy
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) && isFieldImmutable('id');
+      allow delete: if isOwner(userId);
+    }
+
+    // --- COLLECTION PARKINGS ---
+    match /parkings/{parkingId} {
+      allow get, list: if isSignedIn();
+      
+      // Creazione: status deve essere 'libero' e coordinate valide
+      allow create: if isSignedIn() && 
+                      request.resource.data.userId == request.auth.uid &&
+                      request.resource.data.status == 'libero' &&
+                      isValidLat(request.resource.data.latitude) &&
+                      isValidLon(request.resource.data.longitude);
+      
+      // Update: userId immutabile, owner può solo cambiare stato/timestamp
+      allow update: if isSignedIn() && isFieldImmutable('userId') && (
+                      (
+                        isOwner(resource.data.userId) && 
+                        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'timestamp', 'stats'])
+                      ) || 
+                      (
+                        // Logica di Prenotazione
+                        resource.data.status == 'libero' &&
+                        request.resource.data.status == 'in arrivo' &&
+                        request.resource.data.reservedById == request.auth.uid
+                      ) ||
+                      (
+                        // Logica di Cancellazione
+                        resource.data.status == 'in arrivo' &&
+                        isOwner(resource.data.reservedById) &&
+                        request.resource.data.status == 'libero'
+                      )
+                    );
+                    
+      allow delete: if resource != null && isOwner(resource.data.userId);
+    }
+  }
+}
+</file>
+
+<file path="next.config.ts">
+import type { NextConfig } from 'next';
+
+/**
+ * Configurazione ottimizzata per Next.js 15 e Firebase App Hosting.
+ * Include la transpilazione per Mapbox e Firebase per prevenire errori di runtime.
+ */
+const nextConfig: NextConfig = {
+  images: {
+    unoptimized: true,
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'placehold.co',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'picsum.photos',
+        port: '',
+        pathname: '/**',
+      },
+    ],
+  },
+  // Transpilazione necessaria per i moduli Firebase, Mapbox e icone
+  transpilePackages: [
+    'firebase',
+    '@firebase',
+    'lucide-react',
+    'react-map-gl',
+    'mapbox-gl'
+  ],
+};
+
+export default nextConfig;
+</file>
+
+<file path="package.json">
+{
+  "name": "nextn",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 9002",
+    "genkit:dev": "genkit start -- tsx src/ai/dev.ts",
+    "genkit:watch": "genkit start -- tsx --watch src/ai/dev.ts",
+    "build": "NODE_ENV=production next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "generate-icons": "node scripts/generate-icons.mjs"
+  },
+  "dependencies": {
+    "@genkit-ai/google-genai": "^1.20.0",
+    "@genkit-ai/next": "^1.20.0",
+    "@hookform/resolvers": "^4.1.3",
+    "@radix-ui/react-accordion": "^1.2.3",
+    "@radix-ui/react-alert-dialog": "^1.1.6",
+    "@radix-ui/react-avatar": "^1.1.3",
+    "@radix-ui/react-checkbox": "^1.1.4",
+    "@radix-ui/react-collapsible": "^1.1.11",
+    "@radix-ui/react-dialog": "^1.1.6",
+    "@radix-ui/react-dropdown-menu": "^2.1.6",
+    "@radix-ui/react-label": "^2.1.2",
+    "@radix-ui/react-menubar": "^1.1.6",
+    "@radix-ui/react-popover": "^1.1.6",
+    "@radix-ui/react-progress": "^1.1.2",
+    "@radix-ui/react-radio-group": "^1.2.3",
+    "@radix-ui/react-scroll-area": "^1.2.3",
+    "@radix-ui/react-select": "^2.1.6",
+    "@radix-ui/react-separator": "^1.1.2",
+    "@radix-ui/react-slider": "^1.2.3",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-switch": "^1.1.3",
+    "@radix-ui/react-tabs": "^1.1.3",
+    "@radix-ui/react-toast": "^1.2.6",
+    "@radix-ui/react-tooltip": "^1.1.8",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "date-fns": "^3.6.0",
+    "dotenv": "^16.5.0",
+    "embla-carousel-react": "^8.6.0",
+    "firebase": "^11.9.1",
+    "genkit": "^1.20.0",
+    "lucide-react": "^0.475.0",
+    "mapbox-gl": "^3.4.0",
+    "next": "15.5.9",
+    "patch-package": "^8.0.0",
+    "react": "^19.2.1",
+    "react-day-picker": "^9.11.3",
+    "react-dom": "^19.2.1",
+    "react-hook-form": "^7.54.2",
+    "react-map-gl": "^7.1.7",
+    "recharts": "^2.15.1",
+    "sharp": "^0.33.5",
+    "tailwind-merge": "^3.0.1",
+    "tailwindcss-animate": "^1.0.7",
+    "web-push": "^3.6.7",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^19.2.1",
+    "@types/react-dom": "^19.2.1",
+    "@types/web-push": "^3.6.4",
+    "genkit-cli": "^1.20.0",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
+  }
+}
+</file>
+
+<file path="postcss.config.mjs">
+/** @type {import('postcss-load-config').Config} */
+const config = {
+  plugins: {
+    tailwindcss: {},
+  },
+};
+
+export default config;
+</file>
+
+<file path="README.md">
+# Firebase Studio
+
+This is a NextJS starter in Firebase Studio.
+
+To get started, take a look at src/app/page.tsx.
+</file>
+
+<file path="tailwind.config.ts">
+import type {Config} from 'tailwindcss';
+
+export default {
+  darkMode: ['class'],
+  content: [
+    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  theme: {
+    extend: {
+      fontFamily: {
+        body: ['Inter', 'sans-serif'],
+        headline: ['Inter', 'sans-serif'],
+        code: ['monospace'],
+      },
+      colors: {
+        background: 'hsl(var(--background))',
+        foreground: 'hsl(var(--foreground))',
+        card: {
+          DEFAULT: 'hsl(var(--card))',
+          foreground: 'hsl(var(--card-foreground))',
+        },
+        popover: {
+          DEFAULT: 'hsl(var(--popover))',
+          foreground: 'hsl(var(--popover-foreground))',
+        },
+        primary: {
+          DEFAULT: 'hsl(var(--primary))',
+          foreground: 'hsl(var(--primary-foreground))',
+        },
+        secondary: {
+          DEFAULT: 'hsl(var(--secondary))',
+          foreground: 'hsl(var(--secondary-foreground))',
+        },
+        muted: {
+          DEFAULT: 'hsl(var(--muted))',
+          foreground: 'hsl(var(--muted-foreground))',
+        },
+        accent: {
+          DEFAULT: 'hsl(var(--accent))',
+          foreground: 'hsl(var(--accent-foreground))',
+        },
+        destructive: {
+          DEFAULT: 'hsl(var(--destructive))',
+          foreground: 'hsl(var(--destructive-foreground))',
+        },
+        border: 'hsl(var(--border))',
+        input: 'hsl(var(--input))',
+        ring: 'hsl(var(--ring))',
+        chart: {
+          '1': 'hsl(var(--chart-1))',
+          '2': 'hsl(var(--chart-2))',
+          '3': 'hsl(var(--chart-3))',
+          '4': 'hsl(var(--chart-4))',
+          '5': 'hsl(var(--chart-5))',
+        },
+        sidebar: {
+          DEFAULT: 'hsl(var(--sidebar-background))',
+          foreground: 'hsl(var(--sidebar-foreground))',
+          primary: 'hsl(var(--sidebar-primary))',
+          'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
+          accent: 'hsl(var(--sidebar-accent))',
+          'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
+          border: 'hsl(var(--sidebar-border))',
+          ring: 'hsl(var(--sidebar-ring))',
+        },
+      },
+      borderRadius: {
+        lg: 'var(--radius)',
+        md: 'calc(var(--radius) - 2px)',
+        sm: 'calc(var(--radius) - 4px)',
+      },
+      keyframes: {
+        'accordion-down': {
+          from: {
+            height: '0',
+          },
+          to: {
+            height: 'var(--radix-accordion-content-height)',
+          },
+        },
+        'accordion-up': {
+          from: {
+            height: 'var(--radix-accordion-content-height)',
+          },
+          to: {
+            height: '0',
+          },
+        },
+        flash: {
+          '0%, 100%': { opacity: '0', transform: 'scale(0.8)' },
+          '50%': { opacity: '1', transform: 'scale(1.2)' },
+        },
+      },
+      animation: {
+        'accordion-down': 'accordion-down 0.2s ease-out',
+        'accordion-up': 'accordion-up 0.2s ease-out',
+        flash: 'flash 2s ease-in-out',
+      },
+    },
+  },
+  plugins: [require('tailwindcss-animate')],
+} satisfies Config;
+</file>
+
+<file path="tsconfig.json">
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}
+</file>
+
+</files>

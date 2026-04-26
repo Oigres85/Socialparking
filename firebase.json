@@ -1,0 +1,8 @@
+{
+  "hosting": {
+    "target": "social-park-alias",
+    "public": "out",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [{ "source": "**", "destination": "/index.html" }]
+  }
+}
