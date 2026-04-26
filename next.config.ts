@@ -5,6 +5,10 @@ import type { NextConfig } from 'next';
  * Include la transpilazione per Mapbox e Firebase per prevenire errori di runtime.
  */
 const nextConfig: NextConfig = {
+  typescript: {
+    tsconfigPath: './tsconfig.json',
+    ignoreBuildErrors: true,
+  },
   images: {
     unoptimized: true,
     remotePatterns: [

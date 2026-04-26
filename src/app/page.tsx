@@ -32,6 +32,8 @@ import {
 
 import { useGps } from '@/hooks/use-gps';
 import { usePushSubscription } from '@/hooks/use-push-subscription';
+import { useParkingDetection } from '@/hooks/use-parking-detection';
+import { useGeofence } from '@/hooks/use-geofence';
 import { Analytics } from '@/lib/analytics';
 import { useAudio } from '@/hooks/use-audio';
 import { cn } from "@/lib/utils";
@@ -220,7 +222,9 @@ export default function Home() {
   const [showFreedBanner, setShowFreedBanner] = useState(false);
   const [showCancelledBanner, setShowCancelledBanner] = useState(false);
   const [showUnavailableBanner, setShowUnavailableBanner] = useState(false);
-  
+  const [showParkingDetectedPopup, setShowParkingDetectedPopup] = useState(false);
+  const [parkingDetectionCountdown, setParkingDetectionCountdown] = useState(90);
+
   // Hydration guard per localStorage
   const [showOnboarding, setShowOnboarding] = useState(false);
   
@@ -276,6 +280,8 @@ export default function Home() {
 
   const { userLocation, startGps, hasInitialCentered } = useGps(handleLocationUpdate);
   const { ensurePushSubscription } = usePushSubscription(firestore, currentUser?.uid);
+  const { isParkingDetected, parkingLocation, timeRemainingForAlert, resetParking } = useParkingDetection(userLocation);
+  const { isInsideGeofence, hasExited, hasReentered } = useGeofence(userLocation, parkingLocation);
 
   const triggerHaptic = (style: 'light' | 'medium' | 'heavy' = 'light') => {
     if (typeof window !== 'undefined' && 'vibrate' in navigator) {
@@ -315,6 +321,24 @@ export default function Home() {
       signInAnonymously(auth).catch(() => {});
     }
   }, [isClient, auth, currentUser, userLoading]);
+
+  // Mostra pop-up quando viene rilevato il parcheggio
+  useEffect(() => {
+    if (isParkingDetected && !showParkingDetectedPopup) {
+      setShowParkingDetectedPopup(true);
+      triggerHaptic('heavy');
+      playSound('notification');
+    }
+  }, [isParkingDetected, showParkingDetectedPopup, playSound]);
+
+  // Aggiorna il countdown per il rilevamento parcheggio
+  useEffect(() => {
+    if (isParkingDetected) {
+      setParkingDetectionCountdown(0);
+    } else {
+      setParkingDetectionCountdown(Math.ceil(timeRemainingForAlert));
+    }
+  }, [isParkingDetected, timeRemainingForAlert]);
 
   const activeBooking = useMemo(() => {
     if (!currentUser || !Array.isArray(parkingsData) || now === 0) return null;
@@ -455,6 +479,7 @@ export default function Home() {
     setIsSubmitting(true);
     triggerHaptic('medium');
     ensurePushSubscription();
+    resetParking(); // Reset il rilevamento parcheggio
 
     const parkingsCol = collection(firestore, 'parkings');
     const parkingData = {
@@ -463,6 +488,10 @@ export default function Home() {
       status: 'libero',
       timestamp: serverTimestamp(),
       userId: currentUser.uid,
+      // Salva coordinate per geofencing (200m di raggio)
+      geofenceLatitude: userLocation.latitude,
+      geofenceLongitude: userLocation.longitude,
+      geofenceRadius: 200,
     };
 
     addDocumentNonBlocking(parkingsCol, parkingData);
@@ -471,12 +500,12 @@ export default function Home() {
     const yesterdayStr = new Date(Date.now() - 86400000).toDateString();
     const currentStreak = userData?.streak || 0;
     const lastFreedDate = userData?.lastFreedDate || '';
-    
+
     let newStreak = currentStreak;
     if (lastFreedDate !== todayStr) {
       newStreak = lastFreedDate === yesterdayStr ? currentStreak + 1 : 1;
     }
-    
+
     updateDocumentNonBlocking(firestore, `users/${currentUser.uid}`, {
       lastFreedDate: todayStr,
       streak: newStreak,
@@ -501,7 +530,7 @@ export default function Home() {
       setShowFreedBanner(false);
       setIsSubmitting(false);
     }, 5000);
-  }, [currentUser, firestore, userLocation, isSubmitting, userData, ensurePushSubscription]);
+  }, [currentUser, firestore, userLocation, isSubmitting, userData, ensurePushSubscription, resetParking]);
 
   const handleBookSpot = useCallback((spot: any) => {
     if (!currentUser || !firestore || activeBooking) return;
@@ -631,24 +660,27 @@ export default function Home() {
       <div className="absolute top-16 left-4 z-[50] flex flex-col gap-3 pointer-events-none w-72 max-w-[90vw]">
         {!activeBooking && !myActiveSpot && (
           <div className="flex flex-col gap-3 pointer-events-auto">
-            <div className="w-full flex flex-col items-center mb-1">
-              <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest animate-in fade-in slide-in-from-bottom-2">
-                {parkingsFreedByUser > 0 
-                  ? t.veteranHero.replace('{count}', parkingsFreedByUser.toString()) 
-                  : t.newHero}
-              </p>
-            </div>
-            <Button
-              onClick={handleUnpark}
-              className={cn(
-                "w-full font-black text-lg h-13 rounded-[1.5rem] shadow-2xl bg-black text-white border-2 border-white/10 hover:bg-slate-900 active:bg-slate-800 disabled:opacity-100 transition-all uppercase tracking-tight",
-                (!userLocation || isSubmitting) && "opacity-70 cursor-not-allowed",
-                isFirstSession && "animate-pulse"
-              )}
-              disabled={!userLocation || isSubmitting}
-            >
-              {unparkLabel}
-            </Button>
+            {isParkingDetected && (
+              <div className="w-full flex flex-col items-center mb-1">
+                <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest animate-in fade-in slide-in-from-bottom-2">
+                  {parkingsFreedByUser > 0
+                    ? t.veteranHero.replace('{count}', parkingsFreedByUser.toString())
+                    : t.newHero}
+                </p>
+              </div>
+            )}
+            {isParkingDetected && (
+              <Button
+                onClick={handleUnpark}
+                className={cn(
+                  "w-full font-black text-lg h-13 rounded-[1.5rem] shadow-2xl bg-black text-white border-2 border-white/10 hover:bg-slate-900 active:bg-slate-800 disabled:opacity-100 transition-all uppercase tracking-tight animate-in fade-in slide-in-from-left-4 duration-500",
+                  (!userLocation || isSubmitting) && "opacity-70 cursor-not-allowed"
+                )}
+                disabled={!userLocation || isSubmitting}
+              >
+                {unparkLabel}
+              </Button>
+            )}
 
             <Card className="w-full shadow-2xl rounded-[1.5rem] border-2 border-white/10 max-h-[45vh] overflow-hidden flex flex-col bg-black text-white">
               <CardContent className="p-3 flex flex-col gap-2 overflow-y-auto">
@@ -816,6 +848,56 @@ export default function Home() {
           </Card>
         )}
       </div>
+
+      {showParkingDetectedPopup && isParkingDetected && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-black border-2 border-white/10 rounded-[2.5rem] p-8 max-w-sm w-full shadow-2xl text-center space-y-8 animate-in zoom-in-95 duration-300">
+            <div className="flex flex-col items-center gap-4">
+              <div className="text-6xl animate-bounce">🅿️</div>
+              <div className="space-y-2">
+                <p className="text-white font-black text-2xl uppercase tracking-tight">
+                  PARCHEGGIO RILEVATO!
+                </p>
+                <p className="text-white/60 text-sm font-bold">
+                  Sei fermo da 90 secondi
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-4">
+              <div className="flex items-center justify-center gap-2">
+                <span className="text-white/70 text-xs font-black uppercase tracking-widest">Posizione salvata</span>
+                <span className="text-green-400 text-lg">✓</span>
+              </div>
+              <p className="text-white/40 text-xs font-bold">
+                Geofencing attivo: 200m da qui
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                onClick={() => {
+                  setShowParkingDetectedPopup(false);
+                  resetParking();
+                }}
+                variant="outline"
+                className="flex-1 border-white/10 bg-white/5 text-white/70 font-black rounded-2xl h-12 hover:text-white"
+              >
+                NON ORA
+              </Button>
+              <Button
+                onClick={() => {
+                  setShowParkingDetectedPopup(false);
+                  handleUnpark();
+                }}
+                className="flex-1 bg-white text-black font-black rounded-2xl h-12 hover:bg-white/90 active:scale-95 transition-all"
+              >
+                LIBERA PARCHEGGIO
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showNotifNudge && (
         <div className="absolute bottom-20 left-4 right-4 z-[100] animate-in fade-in slide-in-from-bottom-10 duration-500">
