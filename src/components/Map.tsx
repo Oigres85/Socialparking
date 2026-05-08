@@ -51,14 +51,15 @@ const Map = forwardRef<MapRef, MapProps>(({
   if (!isClient) return <div className="h-screen w-screen bg-muted" />;
 
   return (
-    <ReactMapGL
-      ref={ref}
-      mapboxAccessToken={MAPBOX_TOKEN}
-      {...viewState}
-      style={{ width: '100%', height: '100%' }}
-      mapStyle="mapbox://styles/mapbox/streets-v11"
-      onMove={(evt) => setViewState(evt.viewState)}
-    >
+    <div className="relative w-full h-full">
+      <ReactMapGL
+        ref={ref}
+        mapboxAccessToken={MAPBOX_TOKEN}
+        {...viewState}
+        style={{ width: '100%', height: '100%' }}
+        mapStyle="mapbox://styles/mapbox/streets-v11"
+        onMove={(evt) => setViewState(evt.viewState)}
+      >
       {userLocation && (
         <Marker
           latitude={userLocation.latitude}
@@ -98,14 +99,16 @@ const Map = forwardRef<MapRef, MapProps>(({
             longitude={spot.longitude}
             anchor="center"
           >
-            <div className={`relative flex items-center justify-center ${iconColor} drop-shadow-xl cursor-pointer transition-transform hover:scale-110`}>
+            <div className={`relative flex items-center justify-center ${iconColor} drop-shadow-[0_4px_12px_rgba(0,0,0,0.3)] cursor-pointer transition-transform hover:scale-110`}>
               <Circle size={48} strokeWidth={3} />
               <span className="absolute font-black text-xl mb-0.5">P</span>
             </div>
           </Marker>
         )
       })}
-    </ReactMapGL>
+      </ReactMapGL>
+      <div className="absolute inset-0 pointer-events-none bg-gradient-radial from-transparent via-transparent to-black/[0.02]" />
+    </div>
   );
 });
 

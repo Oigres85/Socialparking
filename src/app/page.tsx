@@ -120,13 +120,17 @@ const ItalyFlag = ({ onClick }: { onClick: () => void }) => (
   </svg>
 );
 
-const UKFlag = ({ onClick }: { onClick: () => void }) => (
-  <svg width="24" height="18" viewBox="0 0 60 30" className="cursor-pointer shadow-sm rounded-sm" onClick={onClick}>
-    <path d="M0,0 v30 h60 v-30 z" fill="#012169" />
-    <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" strokeWidth="6" />
-    <path d="M0,0 L60,30 M60,0 L0,30" stroke="#C8102E" strokeWidth="4" />
-    <path d="M30,0 v30 M0,15 h60" stroke="#fff" strokeWidth="10" />
-    <path d="M30,0 v30" stroke="#C8102E" strokeWidth="6" />
+const USFlag = ({ onClick }: { onClick: () => void }) => (
+  <svg width="24" height="18" viewBox="0 0 7.5 5" className="cursor-pointer shadow-sm rounded-sm" onClick={onClick}>
+    <rect width="7.5" height="5" fill="#B22234" />
+    <g fill="#FFF">
+      <rect width="7.5" height="0.385" y="0.77" />
+      <rect width="7.5" height="0.385" y="1.54" />
+      <rect width="7.5" height="0.385" y="2.31" />
+      <rect width="7.5" height="0.385" y="3.08" />
+      <rect width="7.5" height="0.385" y="3.85" />
+    </g>
+    <rect width="3" height="2.5" fill="#3C3B6B" />
   </svg>
 );
 
@@ -647,14 +651,10 @@ export default function Home() {
         <Button
           size="icon"
           onClick={handleCenterMap}
-          className="rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.5)] h-12 w-12 bg-blue-600 text-white pointer-events-auto border-2 border-white/20 hover:bg-blue-700 active:scale-95 transition-all"
+          className="rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.3)] h-12 w-12 bg-gradient-to-br from-blue-600 to-blue-700 text-white pointer-events-auto border-2 border-white/20 hover:bg-blue-700 active:scale-95 transition-all backdrop-blur-md"
         >
           <Crosshair className="h-6 w-6" />
         </Button>
-        <div className="flex flex-col gap-4 pointer-events-auto bg-black/40 p-2.5 rounded-2xl backdrop-blur-xl border border-white/10">
-          <ItalyFlag onClick={() => { triggerHaptic(); setLang('it'); }} />
-          <UKFlag onClick={() => { triggerHaptic(); setLang('en'); }} />
-        </div>
       </div>
 
       <div className="absolute top-16 left-4 z-[50] flex flex-col gap-3 pointer-events-none w-72 max-w-[90vw]">
@@ -673,7 +673,7 @@ export default function Home() {
               <Button
                 onClick={handleUnpark}
                 className={cn(
-                  "w-full font-black text-lg h-13 rounded-[1.5rem] shadow-2xl bg-black text-white border-2 border-white/10 hover:bg-slate-900 active:bg-slate-800 disabled:opacity-100 transition-all uppercase tracking-tight animate-in fade-in slide-in-from-left-4 duration-500",
+                  "w-full font-black text-lg h-13 rounded-[1.5rem] shadow-[0_8px_32px_rgba(0,0,0,0.3)] bg-gradient-to-br from-slate-900 to-black text-white border-2 border-white/20 hover:bg-slate-800 active:bg-slate-700 disabled:opacity-100 transition-all uppercase tracking-tight animate-in fade-in slide-in-from-left-4 duration-500 backdrop-blur-md",
                   (!userLocation || isSubmitting) && "opacity-70 cursor-not-allowed"
                 )}
                 disabled={!userLocation || isSubmitting}
@@ -682,7 +682,7 @@ export default function Home() {
               </Button>
             )}
 
-            <Card className="w-full shadow-2xl rounded-[1.5rem] border-2 border-white/10 max-h-[45vh] overflow-hidden flex flex-col bg-black text-white">
+            <Card className="w-full shadow-[0_12px_40px_rgba(0,0,0,0.3)] rounded-[2rem] border-2 border-white/20 max-h-[45vh] overflow-hidden flex flex-col bg-gradient-to-br from-slate-900/90 to-black/90 text-white backdrop-blur-lg">
               <CardContent className="p-3 flex flex-col gap-2 overflow-y-auto">
                 <div className="flex flex-col gap-1 shrink-0">
                   <div className="flex items-center justify-between h-8">
@@ -735,7 +735,7 @@ export default function Home() {
         )}
 
         {myActiveSpot && !activeBooking && (
-          <Card className="w-full shadow-2xl rounded-[2.5rem] bg-black border-2 border-white/10 text-white pointer-events-auto overflow-hidden animate-in fade-in slide-in-from-left-6 duration-500">
+          <Card className="w-full shadow-[0_12px_40px_rgba(0,0,0,0.3)] rounded-[2.5rem] bg-gradient-to-br from-slate-900/90 to-black/90 border-2 border-white/20 text-white pointer-events-auto overflow-hidden animate-in fade-in slide-in-from-left-6 duration-500 backdrop-blur-lg">
             <CardContent className="p-8 space-y-7 text-center">
               <div className="flex items-center justify-center gap-4">
                 {myActiveSpot.status === 'in arrivo'
@@ -777,7 +777,7 @@ export default function Home() {
 
         {activeBooking && (
           <Card className={cn(
-            "w-full shadow-2xl rounded-[1.5rem] bg-black border-2 border-white/10 text-white pointer-events-auto transition-all duration-700 overflow-hidden",
+            "w-full shadow-[0_12px_40px_rgba(0,0,0,0.3)] rounded-[1.5rem] bg-gradient-to-br from-slate-900/90 to-black/90 border-2 border-white/20 text-white pointer-events-auto transition-all duration-700 overflow-hidden backdrop-blur-lg",
             isNavigating ? 'max-h-[250px]' : 'max-h-[550px]'
           )}>
             <CardContent className={cn("transition-all duration-500", isNavigating ? "p-3" : "p-8")}>
@@ -850,8 +850,8 @@ export default function Home() {
       </div>
 
       {showParkingDetectedPopup && isParkingDetected && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-black border-2 border-white/10 rounded-[2.5rem] p-8 max-w-sm w-full shadow-2xl text-center space-y-8 animate-in zoom-in-95 duration-300">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-gradient-to-br from-slate-900/95 to-black/95 border-2 border-white/20 rounded-[2.5rem] p-8 max-w-sm w-full shadow-[0_20px_60px_rgba(0,0,0,0.4)] text-center space-y-8 animate-in zoom-in-95 duration-300 backdrop-blur-lg">
             <div className="flex flex-col items-center gap-4">
               <div className="text-6xl animate-bounce">🅿️</div>
               <div className="space-y-2">
@@ -901,7 +901,7 @@ export default function Home() {
 
       {showNotifNudge && (
         <div className="absolute bottom-20 left-4 right-4 z-[100] animate-in fade-in slide-in-from-bottom-10 duration-500">
-          <div className="bg-slate-900 border-2 border-blue-600/30 rounded-[1.5rem] p-5 shadow-2xl backdrop-blur-xl flex flex-col gap-4 text-white">
+          <div className="bg-gradient-to-br from-slate-900/90 to-blue-950/80 border-2 border-blue-500/30 rounded-[2rem] p-5 shadow-[0_12px_40px_rgba(0,0,0,0.3)] backdrop-blur-xl flex flex-col gap-4 text-white">
             <div className="flex items-start justify-between gap-3">
               <div className="bg-blue-600/20 p-2.5 rounded-xl">
                 <Bell className="h-5 w-5 text-blue-400" />
@@ -939,7 +939,7 @@ export default function Home() {
 
       {showFreedBanner && (
         <div className="absolute bottom-16 left-4 right-4 z-[100] animate-in fade-in slide-in-from-bottom-6 duration-500">
-          <div className="bg-black/95 text-white p-6 rounded-[2rem] shadow-[0_10px_40px_rgba(0,0,0,0.6)] font-black text-xl text-center border-2 border-white/10 backdrop-blur-xl uppercase tracking-tight">
+          <div className="bg-gradient-to-br from-slate-900/90 to-black/90 text-white p-6 rounded-[2rem] shadow-[0_12px_40px_rgba(0,0,0,0.3)] font-black text-xl text-center border-2 border-white/20 backdrop-blur-lg uppercase tracking-tight">
             <div className="flex flex-col items-center gap-1">
               <span>{t.parkingFreed}</span>
               {(userData?.streak || 0) > 1 && (
@@ -954,7 +954,7 @@ export default function Home() {
 
       {showCancelledBanner && (
         <div className="absolute bottom-16 left-4 right-4 z-[100] animate-in fade-in slide-in-from-bottom-6 duration-500">
-          <div className="bg-black/95 text-white p-6 rounded-[2rem] shadow-[0_10px_40px_rgba(0,0,0,0.6)] font-black text-xl text-center border-2 border-white/10 backdrop-blur-xl uppercase tracking-tight">
+          <div className="bg-gradient-to-br from-slate-900/90 to-black/90 text-white p-6 rounded-[2rem] shadow-[0_12px_40px_rgba(0,0,0,0.3)] font-black text-xl text-center border-2 border-white/20 backdrop-blur-lg uppercase tracking-tight">
             {t.bookingCancelled}
           </div>
         </div>
@@ -962,47 +962,66 @@ export default function Home() {
 
       {showUnavailableBanner && (
         <div className="absolute bottom-16 left-4 right-4 z-[100] animate-in fade-in slide-in-from-bottom-6 duration-500">
-          <div className="bg-black/95 text-white p-8 rounded-[2.5rem] shadow-[0_15px_60px_rgba(0,0,0,0.8)] font-black text-2xl text-center border-2 border-red-900/50 backdrop-blur-2xl uppercase tracking-tight leading-tight">
+          <div className="bg-gradient-to-br from-red-950/90 to-black/90 text-white p-8 rounded-[2.5rem] shadow-[0_12px_40px_rgba(0,0,0,0.3)] font-black text-2xl text-center border-2 border-red-500/30 backdrop-blur-lg uppercase tracking-tight leading-tight">
             {t.spotUnavailable}
           </div>
         </div>
       )}
 
-      {weeklyLeaderboard.length > 1 && (
-        <div className="absolute bottom-16 right-4 z-[50]">
+      <div className="absolute bottom-4 right-4 z-[50] flex flex-col items-end gap-3">
+        <div className="flex gap-2 pointer-events-auto bg-white/10 p-1.5 rounded-full backdrop-blur-lg border border-white/20 shadow-[0_8px_24px_rgba(0,0,0,0.2)]">
           <button
-            onClick={() => setShowLeaderboard(v => !v)}
-            className="bg-black/80 border border-white/10 rounded-full px-3 py-2 text-[10px] font-black text-white/60 uppercase tracking-widest backdrop-blur-md"
+            onClick={() => { triggerHaptic(); setLang('it'); }}
+            className={cn("p-1.5 rounded-full transition-all", lang === 'it' ? 'bg-white/20 shadow-sm' : 'hover:bg-white/10')}
+            title="Italiano"
           >
-            🏆 Top 5
+            <ItalyFlag onClick={() => {}} />
           </button>
-          
-          {showLeaderboard && (
-            <div className="absolute bottom-10 right-0 w-52 bg-black/95 border border-white/10 rounded-2xl p-4 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-200">
-              <p className="text-[9px] font-black text-white/40 uppercase tracking-widest mb-3">
-                Classifica settimana
-              </p>
-              {weeklyLeaderboard.map(entry => (
-                <div key={entry.userId} className={`flex items-center justify-between py-1.5 ${entry.isMe ? 'text-orange-400' : 'text-white/70'}`}>
-                  <span className="text-xs font-black">
-                    {entry.rank === 1 ? '🥇' : entry.rank === 2 ? '🥈' : entry.rank === 3 ? '🥉' : `${entry.rank}.`} {entry.label}
-                  </span>
-                  <span className="text-xs font-black">{entry.count} 🅿️</span>
-                </div>
-              ))}
-            </div>
-          )}
+          <button
+            onClick={() => { triggerHaptic(); setLang('en'); }}
+            className={cn("p-1.5 rounded-full transition-all", lang === 'en' ? 'bg-white/20 shadow-sm' : 'hover:bg-white/10')}
+            title="English"
+          >
+            <USFlag onClick={() => {}} />
+          </button>
         </div>
-      )}
+
+        {weeklyLeaderboard.length > 1 && (
+          <div>
+            <button
+              onClick={() => setShowLeaderboard(v => !v)}
+              className="bg-white/10 border border-white/20 rounded-full px-3 py-2 text-[10px] font-black text-white/70 uppercase tracking-widest backdrop-blur-lg shadow-[0_4px_12px_rgba(0,0,0,0.2)] hover:bg-white/15 transition-all"
+            >
+              🏆 Top 5
+            </button>
+
+            {showLeaderboard && (
+              <div className="absolute bottom-12 right-0 w-52 bg-black/70 border border-white/20 rounded-2xl p-4 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)] animate-in fade-in zoom-in-95 duration-200">
+                <p className="text-[9px] font-black text-white/40 uppercase tracking-widest mb-3">
+                  Classifica settimana
+                </p>
+                {weeklyLeaderboard.map(entry => (
+                  <div key={entry.userId} className={`flex items-center justify-between py-1.5 ${entry.isMe ? 'text-orange-400' : 'text-white/70'}`}>
+                    <span className="text-xs font-black">
+                      {entry.rank === 1 ? '🥇' : entry.rank === 2 ? '🥈' : entry.rank === 3 ? '🥉' : `${entry.rank}.`} {entry.label}
+                    </span>
+                    <span className="text-xs font-black">{entry.count} 🅿️</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       <div className="absolute bottom-4 left-0 right-0 z-[50] text-center pointer-events-none px-6 space-y-1">
         <div className="flex flex-col items-center gap-1.5">
-          <p className="text-[10px] text-white/60 font-black uppercase tracking-widest bg-black/60 inline-block px-4 py-1.5 rounded-full backdrop-blur-md border border-white/10 shadow-lg">
+          <p className="text-[10px] text-white/70 font-black uppercase tracking-widest bg-white/10 inline-block px-4 py-1.5 rounded-full backdrop-blur-lg border border-white/20 shadow-[0_4px_12px_rgba(0,0,0,0.2)]">
             {dailyFreedCount} {t.todayFreed}
             {myTodayCount > 0 && ` · Tu: ${myTodayCount} 🏆`}
           </p>
           {parkingsFreedByUser > 0 && (
-            <p className="text-[9px] text-orange-400 font-bold uppercase tracking-wider bg-orange-400/10 px-3 py-1 rounded-full border border-orange-400/20 backdrop-blur-sm">
+            <p className="text-[9px] text-orange-300 font-bold uppercase tracking-wider bg-orange-500/15 px-3 py-1 rounded-full border border-orange-400/30 backdrop-blur-lg shadow-[0_2px_8px_rgba(0,0,0,0.15)]">
               {t.personalStats}: {parkingsFreedByUser} 🅿️
             </p>
           )}
