@@ -647,7 +647,21 @@ export default function Home() {
         navigationTarget={isNavigating && activeBooking ? activeBooking : null}
       />
 
-      <div className="absolute top-16 right-4 z-[50] flex flex-col items-center gap-4">
+      <div className="absolute top-16 right-4 z-[50] flex flex-col items-end gap-3 pointer-events-none w-72 max-w-[90vw]">
+        <div className="flex flex-col gap-3 pointer-events-auto">
+          {isParkingDetected && (
+            <Button
+              onClick={handleUnpark}
+              className={cn(
+                "w-full font-black text-lg h-13 rounded-[1.5rem] shadow-[0_8px_32px_rgba(0,0,0,0.3)] bg-gradient-to-br from-slate-900 to-black text-white border-2 border-white/20 hover:bg-slate-800 active:bg-slate-700 disabled:opacity-100 transition-all uppercase tracking-tight animate-in fade-in slide-in-from-right-4 duration-500 backdrop-blur-md",
+                (!userLocation || isSubmitting) && "opacity-70 cursor-not-allowed"
+              )}
+              disabled={!userLocation || isSubmitting}
+            >
+              {unparkLabel}
+            </Button>
+          )}
+        </div>
         <Button
           size="icon"
           onClick={handleCenterMap}
@@ -660,27 +674,6 @@ export default function Home() {
       <div className="absolute top-16 left-4 z-[50] flex flex-col gap-3 pointer-events-none w-72 max-w-[90vw]">
         {!activeBooking && !myActiveSpot && (
           <div className="flex flex-col gap-3 pointer-events-auto">
-            {isParkingDetected && (
-              <div className="w-full flex flex-col items-center mb-1">
-                <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest animate-in fade-in slide-in-from-bottom-2">
-                  {parkingsFreedByUser > 0
-                    ? t.veteranHero.replace('{count}', parkingsFreedByUser.toString())
-                    : t.newHero}
-                </p>
-              </div>
-            )}
-            {isParkingDetected && (
-              <Button
-                onClick={handleUnpark}
-                className={cn(
-                  "w-full font-black text-lg h-13 rounded-[1.5rem] shadow-[0_8px_32px_rgba(0,0,0,0.3)] bg-gradient-to-br from-slate-900 to-black text-white border-2 border-white/20 hover:bg-slate-800 active:bg-slate-700 disabled:opacity-100 transition-all uppercase tracking-tight animate-in fade-in slide-in-from-left-4 duration-500 backdrop-blur-md",
-                  (!userLocation || isSubmitting) && "opacity-70 cursor-not-allowed"
-                )}
-                disabled={!userLocation || isSubmitting}
-              >
-                {unparkLabel}
-              </Button>
-            )}
 
             <Card className="w-full shadow-[0_12px_40px_rgba(0,0,0,0.3)] rounded-[2rem] border-2 border-white/20 max-h-[45vh] overflow-hidden flex flex-col bg-gradient-to-br from-slate-900/90 to-black/90 text-white backdrop-blur-lg">
               <CardContent className="p-3 flex flex-col gap-2 overflow-y-auto">
@@ -968,50 +961,21 @@ export default function Home() {
         </div>
       )}
 
-      <div className="absolute bottom-4 right-4 z-[50] flex flex-col items-end gap-3">
-        <div className="flex gap-2 pointer-events-auto bg-white/10 p-1.5 rounded-full backdrop-blur-lg border border-white/20 shadow-[0_8px_24px_rgba(0,0,0,0.2)]">
-          <button
-            onClick={() => { triggerHaptic(); setLang('it'); }}
-            className={cn("p-1.5 rounded-full transition-all", lang === 'it' ? 'bg-white/20 shadow-sm' : 'hover:bg-white/10')}
-            title="Italiano"
-          >
-            <ItalyFlag onClick={() => {}} />
-          </button>
-          <button
-            onClick={() => { triggerHaptic(); setLang('en'); }}
-            className={cn("p-1.5 rounded-full transition-all", lang === 'en' ? 'bg-white/20 shadow-sm' : 'hover:bg-white/10')}
-            title="English"
-          >
-            <USFlag onClick={() => {}} />
-          </button>
-        </div>
-
-        {weeklyLeaderboard.length > 1 && (
-          <div>
-            <button
-              onClick={() => setShowLeaderboard(v => !v)}
-              className="bg-white/10 border border-white/20 rounded-full px-3 py-2 text-[10px] font-black text-white/70 uppercase tracking-widest backdrop-blur-lg shadow-[0_4px_12px_rgba(0,0,0,0.2)] hover:bg-white/15 transition-all"
-            >
-              🏆 Top 5
-            </button>
-
-            {showLeaderboard && (
-              <div className="absolute bottom-12 right-0 w-52 bg-black/70 border border-white/20 rounded-2xl p-4 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)] animate-in fade-in zoom-in-95 duration-200">
-                <p className="text-[9px] font-black text-white/40 uppercase tracking-widest mb-3">
-                  Classifica settimana
-                </p>
-                {weeklyLeaderboard.map(entry => (
-                  <div key={entry.userId} className={`flex items-center justify-between py-1.5 ${entry.isMe ? 'text-orange-400' : 'text-white/70'}`}>
-                    <span className="text-xs font-black">
-                      {entry.rank === 1 ? '🥇' : entry.rank === 2 ? '🥈' : entry.rank === 3 ? '🥉' : `${entry.rank}.`} {entry.label}
-                    </span>
-                    <span className="text-xs font-black">{entry.count} 🅿️</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+      <div className="absolute bottom-4 right-4 z-[50] flex gap-2 pointer-events-auto bg-white/10 p-1.5 rounded-full backdrop-blur-lg border border-white/20 shadow-[0_8px_24px_rgba(0,0,0,0.2)]">
+        <button
+          onClick={() => { triggerHaptic(); setLang('it'); }}
+          className={cn("p-1.5 rounded-full transition-all", lang === 'it' ? 'bg-white/20 shadow-sm' : 'hover:bg-white/10')}
+          title="Italiano"
+        >
+          <ItalyFlag onClick={() => {}} />
+        </button>
+        <button
+          onClick={() => { triggerHaptic(); setLang('en'); }}
+          className={cn("p-1.5 rounded-full transition-all", lang === 'en' ? 'bg-white/20 shadow-sm' : 'hover:bg-white/10')}
+          title="English"
+        >
+          <USFlag onClick={() => {}} />
+        </button>
       </div>
 
       <div className="absolute bottom-4 left-0 right-0 z-[50] text-center pointer-events-none px-6 space-y-1">
