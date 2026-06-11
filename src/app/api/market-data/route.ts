@@ -4,7 +4,7 @@ import type { StockQuote } from '@/types/trading';
 let cache: { data: unknown; ts: number } = { data: null, ts: 0 };
 const CACHE_TTL = 60_000;
 
-const PORTFOLIO = ['NVDA', 'MU', 'AMD', 'INTC', 'TSLA', 'MSTR'];
+const PORTFOLIO = ['NVDA', 'AMD', 'MU', 'INTC', 'TSLA', 'MSTR', 'RGTI', 'OKLO', 'ARBE'];
 const MACRO = ['^VIX', '^TNX', '^KS11', 'JPY=X'];
 
 const LABELS: Record<string, string> = {
@@ -16,8 +16,9 @@ const LABELS: Record<string, string> = {
 
 // stooq.com symbol mapping (fallback source, no API key, no Cloudflare)
 const STOOQ: Record<string, string> = {
-  NVDA: 'nvda.us', MU: 'mu.us', AMD: 'amd.us',
+  NVDA: 'nvda.us', AMD: 'amd.us', MU: 'mu.us',
   INTC: 'intc.us', TSLA: 'tsla.us', MSTR: 'mstr.us',
+  RGTI: 'rgti.us', OKLO: 'oklo.us', ARBE: 'arbe.us',
   '^VIX': '^vix', '^TNX': 'tnx', '^KS11': '^ks11', 'JPY=X': 'usdjpy',
 };
 

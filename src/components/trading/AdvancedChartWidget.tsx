@@ -3,15 +3,18 @@
 import { useState, useEffect, useRef, memo } from 'react';
 
 const SYMBOLS = [
-  { id: 'NASDAQ:NVDA', label: 'NVDA' },
-  { id: 'NASDAQ:MU', label: 'MU' },
-  { id: 'NASDAQ:AMD', label: 'AMD' },
-  { id: 'NASDAQ:INTC', label: 'INTC' },
-  { id: 'NASDAQ:TSLA', label: 'TSLA' },
-  { id: 'NASDAQ:MSTR', label: 'MSTR' },
-  { id: 'CBOE:VIX', label: 'VIX' },
-  { id: 'TVC:US10Y', label: 'US10Y' },
-  { id: 'SP:SPX', label: 'S&P' },
+  { id: 'NASDAQ:NVDA',  label: 'NVDA' },
+  { id: 'NASDAQ:AMD',   label: 'AMD'  },
+  { id: 'NASDAQ:MU',    label: 'MU'   },
+  { id: 'NASDAQ:INTC',  label: 'INTC' },
+  { id: 'NASDAQ:TSLA',  label: 'TSLA' },
+  { id: 'NASDAQ:MSTR',  label: 'MSTR' },
+  { id: 'NASDAQ:RGTI',  label: 'RGTI' },
+  { id: 'NYSE:OKLO',    label: 'OKLO' },
+  { id: 'NASDAQ:ARBE',  label: 'ARBE' },
+  { id: 'CBOE:VIX',     label: 'VIX'  },
+  { id: 'TVC:US10Y',    label: 'US10Y'},
+  { id: 'SP:SPX',       label: 'S&P'  },
 ];
 
 const INTERVALS = [

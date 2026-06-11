@@ -3,20 +3,23 @@
 import { useEffect, useRef, memo } from 'react';
 
 const SYMBOLS = [
-  { proName: 'NASDAQ:NVDA', title: 'NVDA' },
-  { proName: 'NASDAQ:MU', title: 'MU' },
-  { proName: 'NASDAQ:AMD', title: 'AMD' },
-  { proName: 'NASDAQ:INTC', title: 'INTC' },
-  { proName: 'NASDAQ:TSLA', title: 'TSLA' },
-  { proName: 'NASDAQ:MSTR', title: 'MSTR' },
-  { proName: 'CBOE:VIX', title: 'VIX' },
-  { proName: 'TVC:US10Y', title: 'US10Y' },
-  { proName: 'FX_IDC:USDJPY', title: 'USD/JPY' },
-  { proName: 'INDEX:KOSPI', title: 'KOSPI' },
-  { proName: 'SP:SPX', title: 'S&P500' },
-  { proName: 'NASDAQ:QQQ', title: 'QQQ' },
-  { proName: 'TVC:GOLD', title: 'GOLD' },
-  { proName: 'CRYPTOCAP:BTC', title: 'BTC' },
+  { proName: 'NASDAQ:NVDA',  title: 'NVDA'    },
+  { proName: 'NASDAQ:AMD',   title: 'AMD'     },
+  { proName: 'NASDAQ:MU',    title: 'MU'      },
+  { proName: 'NASDAQ:INTC',  title: 'INTC'    },
+  { proName: 'NASDAQ:TSLA',  title: 'TSLA'    },
+  { proName: 'NASDAQ:MSTR',  title: 'MSTR'    },
+  { proName: 'NASDAQ:RGTI',  title: 'RGTI'    },
+  { proName: 'NYSE:OKLO',    title: 'OKLO'    },
+  { proName: 'NASDAQ:ARBE',  title: 'ARBE'    },
+  { proName: 'CBOE:VIX',     title: 'VIX'     },
+  { proName: 'TVC:US10Y',    title: 'US10Y'   },
+  { proName: 'FX_IDC:USDJPY',title: 'USD/JPY' },
+  { proName: 'INDEX:KOSPI',  title: 'KOSPI'   },
+  { proName: 'SP:SPX',       title: 'S&P500'  },
+  { proName: 'NASDAQ:QQQ',   title: 'QQQ'     },
+  { proName: 'TVC:GOLD',     title: 'GOLD'    },
+  { proName: 'CRYPTOCAP:BTC',title: 'BTC'     },
 ];
 
 function TickerTapeWidget() {
