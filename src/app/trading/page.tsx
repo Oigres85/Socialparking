@@ -1,29 +1,49 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import type { MarketDataResponse, NewsResponse } from '@/types/trading';
-
-import MacroBar from '@/components/trading/MacroBar';
-import PortfolioCards from '@/components/trading/PortfolioCards';
+import type { MarketDataResponse } from '@/types/trading';
+import PortfolioTable from '@/components/trading/PortfolioTable';
 import AINotesPanel from '@/components/trading/AINotesPanel';
 import ClaudeAIBridge from '@/components/trading/ClaudeAIBridge';
 
-const TradingViewGrid = dynamic(() => import('@/components/trading/TradingViewGrid'), {
-  ssr: false,
-});
-const NewsAggregator = dynamic(() => import('@/components/trading/NewsAggregator'), {
-  ssr: false,
-});
+// All TradingView widgets must be client-only (no SSR)
+const TickerTapeWidget     = dynamic(() => import('@/components/trading/TickerTapeWidget'),     { ssr: false });
+const MarketOverviewWidget = dynamic(() => import('@/components/trading/MarketOverviewWidget'), { ssr: false });
+const AdvancedChartWidget  = dynamic(() => import('@/components/trading/AdvancedChartWidget'),  { ssr: false });
+const NewsPanel            = dynamic(() => import('@/components/trading/NewsPanel'),            { ssr: false });
+
+interface NewsItem { title: string; link: string; pubDate: string; }
+interface NewsFeed { id: string; name: string; items: NewsItem[]; }
+
+function Clock() {
+  const [time, setTime] = useState('');
+  useEffect(() => {
+    const tick = () =>
+      setTime(
+        new Date().toLocaleTimeString('en-US', {
+          hour12: false,
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          timeZone: 'America/New_York',
+        }) + ' ET'
+      );
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
+  return <span className="text-[#444] font-mono text-[10px] tabular-nums">{time}</span>;
+}
 
 export default function TradingDashboard() {
   const [marketData, setMarketData] = useState<MarketDataResponse | undefined>();
-  const [newsData, setNewsData] = useState<NewsResponse | undefined>();
   const [loadingMarket, setLoadingMarket] = useState(true);
-  const [loadingNews, setLoadingNews] = useState(true);
-  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
-  const [aiNotes, setAiNotes] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState<string>('');
+  const [aiNotes, setAiNotes] = useState('');
+  // Shared news state lifted up for Claude Bridge
+  const [newsFeeds, setNewsFeeds] = useState<NewsFeed[]>([]);
 
   useEffect(() => {
     const saved = localStorage.getItem('trading-ai-notes');
@@ -33,85 +53,83 @@ export default function TradingDashboard() {
   const fetchMarket = useCallback(async () => {
     try {
       const res = await fetch('/api/market-data');
-      const data = await res.json();
+      const data: MarketDataResponse = await res.json();
       setMarketData(data);
-      setLastUpdate(new Date());
-    } catch (err) {
-      console.error('Market fetch error', err);
-    } finally {
-      setLoadingMarket(false);
-    }
+      setLastUpdate(new Date().toLocaleTimeString('it-IT'));
+    } catch { /* silently fail — TradingView widgets still show live data */ }
+    finally { setLoadingMarket(false); }
   }, []);
 
-  const fetchNews = useCallback(async () => {
-    try {
-      const res = await fetch('/api/news');
-      const data = await res.json();
-      setNewsData(data);
-    } catch (err) {
-      console.error('News fetch error', err);
-    } finally {
-      setLoadingNews(false);
-    }
-  }, []);
-
-  const refresh = useCallback(async () => {
+  const handleRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([fetchMarket(), fetchNews()]);
+    await fetchMarket();
     setRefreshing(false);
-  }, [fetchMarket, fetchNews]);
+  }, [fetchMarket]);
 
   useEffect(() => {
     fetchMarket();
-    fetchNews();
-    const interval = setInterval(fetchMarket, 60_000);
-    return () => clearInterval(interval);
-  }, [fetchMarket, fetchNews]);
+    const id = setInterval(fetchMarket, 60_000);
+    return () => clearInterval(id);
+  }, [fetchMarket]);
 
-  const isMarketOpen =
-    marketData?.portfolio?.['NVDA']?.marketState === 'REGULAR';
+  const isOpen = marketData?.portfolio?.['NVDA']?.marketState === 'REGULAR';
 
   return (
     <div
-      className="min-h-screen bg-[#080808] text-[#e0e0e0]"
+      className="min-h-screen bg-[#060606] text-[#e0e0e0] overflow-x-hidden"
       style={{ fontFamily: "'Courier New', Courier, monospace" }}
     >
-      {/* ── HEADER ── */}
-      <header className="sticky top-0 z-50 bg-[#080808]/95 backdrop-blur border-b border-[#1a1a1a] px-4 py-2 flex items-center justify-between">
-        <div className="flex items-center gap-3 min-w-0">
-          <span className="text-[#ff6600] font-bold text-base tracking-[0.2em] shrink-0">
-            ◉ TRADING TERMINAL
+      {/* ════ TICKER TAPE (sticky) ════ */}
+      <div className="sticky top-0 z-50 bg-[#060606] border-b border-[#1a1a1a]">
+        <TickerTapeWidget />
+      </div>
+
+      {/* ════ HEADER ════ */}
+      <header className="border-b border-[#1a1a1a] bg-[#080808] px-4 py-2.5 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4 min-w-0">
+          {/* Logo */}
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="flex flex-col gap-0.5">
+              <div className="h-0.5 w-5 bg-[#ff6600]" />
+              <div className="h-0.5 w-3 bg-[#ff6600]/60" />
+              <div className="h-0.5 w-4 bg-[#ff6600]/30" />
+            </div>
+            <span className="text-[#ff6600] font-mono font-bold tracking-[0.25em] text-sm">
+              TRADING TERMINAL
+            </span>
+          </div>
+
+          <span className="text-[#1e1e1e] hidden sm:block">│</span>
+          <span className="text-[#333] font-mono text-[10px] tracking-widest hidden sm:block">
+            INSTITUTIONAL DASHBOARD
           </span>
-          <span className="text-[#333] hidden sm:block">│</span>
-          <span className="text-[#444] text-[10px] tracking-widest hidden sm:block">
-            INSTITUTIONAL DASHBOARD v1.0
-          </span>
-          <span className="text-[#333] hidden md:block">│</span>
-          <span className="text-[#444] text-[10px] hidden md:block">
-            TECH / SEMICONDUCTORS
+          <span className="text-[#1e1e1e] hidden md:block">│</span>
+          <span className="text-[#2a2a2a] font-mono text-[10px] hidden md:block">
+            TECH / SEMICONDUCTORS · NVDA MU AMD INTC TSLA MSTR
           </span>
         </div>
 
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-4 shrink-0">
+          <Clock />
           {lastUpdate && (
-            <span className="text-[#333] text-[9px] font-mono hidden sm:block">
-              UPD {lastUpdate.toLocaleTimeString('it-IT')}
+            <span className="text-[#2a2a2a] font-mono text-[9px] hidden sm:block">
+              UPD {lastUpdate}
             </span>
           )}
           <div className="flex items-center gap-1.5">
             <div
-              className={`w-1.5 h-1.5 rounded-full ${
-                isMarketOpen ? 'bg-[#00e676] animate-pulse' : 'bg-[#444]'
+              className={`w-2 h-2 rounded-full ${
+                isOpen ? 'bg-[#00e676] animate-pulse' : 'bg-[#333]'
               }`}
             />
-            <span className="text-[9px] font-mono text-[#444]">
-              {isMarketOpen ? 'MARKET OPEN' : 'AFTER HOURS'}
+            <span className="font-mono text-[9px] text-[#444]">
+              {isOpen ? 'MARKET OPEN' : 'AFTER HOURS'}
             </span>
           </div>
           <button
-            onClick={refresh}
+            onClick={handleRefresh}
             disabled={refreshing}
-            className="text-[10px] font-mono border border-[#ff6600]/60 text-[#ff6600] px-2.5 py-1 hover:bg-[#ff6600] hover:text-black transition-colors disabled:opacity-50 tracking-widest"
+            className="font-mono text-[10px] border border-[#ff6600]/40 text-[#ff6600]/70 px-3 py-1 tracking-widest hover:bg-[#ff6600]/10 hover:text-[#ff6600] hover:border-[#ff6600] transition-all disabled:opacity-30"
           >
             {refreshing ? '↻ …' : '↻ REFRESH'}
           </button>
@@ -119,35 +137,42 @@ export default function TradingDashboard() {
       </header>
 
       <main className="p-3 space-y-3">
-        {/* ── MACRO BAR ── */}
-        <MacroBar macroData={marketData?.macro} loading={loadingMarket} />
-
-        {/* ── PORTFOLIO CARDS ── */}
-        <PortfolioCards portfolioData={marketData?.portfolio} loading={loadingMarket} />
-
-        {/* ── CHARTS + NEWS ── */}
-        <div className="grid grid-cols-1 xl:grid-cols-5 gap-3">
-          <div className="xl:col-span-3">
-            <TradingViewGrid />
+        {/* ════ UPPER SECTION: Left column | Advanced Chart ════ */}
+        <div className="grid grid-cols-1 xl:grid-cols-[360px_1fr] gap-3">
+          {/* Left column: Portfolio table + Market Overview */}
+          <div className="flex flex-col gap-3">
+            <PortfolioTable marketData={marketData} loading={loadingMarket} />
+            <div className="flex-1" style={{ minHeight: 360 }}>
+              <MarketOverviewWidget />
+            </div>
           </div>
-          <div className="xl:col-span-2 min-h-[600px]">
-            <NewsAggregator newsData={newsData} loading={loadingNews} />
+
+          {/* Advanced chart with symbol + interval selector */}
+          <div style={{ minHeight: 540 }}>
+            <AdvancedChartWidget />
           </div>
         </div>
 
-        {/* ── CLAUDE AI BRIDGE + AI NOTES ── */}
+        {/* ════ LOWER SECTION: News | Claude Bridge + AI Notes ════ */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
-          <ClaudeAIBridge marketData={marketData} newsData={newsData} />
-          <AINotesPanel notes={aiNotes} onChange={setAiNotes} />
+          {/* News panel (client-side rss2json) */}
+          <div style={{ minHeight: 520 }}>
+            <NewsPanel />
+          </div>
+
+          {/* Right column: Claude Bridge + AI Notes */}
+          <div className="flex flex-col gap-3">
+            <ClaudeAIBridge marketData={marketData} newsFeeds={newsFeeds} />
+            <AINotesPanel notes={aiNotes} onChange={setAiNotes} />
+          </div>
         </div>
       </main>
 
-      {/* ── FOOTER ── */}
-      <footer className="border-t border-[#111] px-4 py-3 mt-4">
-        <p className="text-[#222] font-mono text-[9px] text-center tracking-wider">
-          DATA: YAHOO FINANCE (DELAYED) — NEWS: RSS PUBLIC FEEDS — CHARTS: TRADINGVIEW FREE WIDGET
-          &nbsp;│&nbsp;
-          FOR INFORMATIONAL PURPOSES ONLY — NOT FINANCIAL ADVICE
+      {/* ════ FOOTER ════ */}
+      <footer className="border-t border-[#0f0f0f] mt-4 px-4 py-3">
+        <p className="text-[#1a1a1a] font-mono text-[8px] text-center tracking-widest">
+          CHARTS & PRICES: TRADINGVIEW FREE WIDGET · DELAYED QUOTES: YAHOO FINANCE / STOOQ.COM
+          &nbsp;│&nbsp;NEWS: API.RSS2JSON.COM · FOR INFORMATIONAL PURPOSES ONLY · NOT FINANCIAL ADVICE
         </p>
       </footer>
     </div>
