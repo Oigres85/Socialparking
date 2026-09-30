@@ -20,3 +20,13 @@ export const NEARBY_SEARCH_RADIUS_M = 5_000;
 
 /** Raggio in metri per le notifiche push ai cercatori vicini */
 export const NOTIFY_RADIUS_M = 200;
+
+/** Finestra temporale della query "posti live": evita di scaricare l'intera collezione parkings */
+export const LIVE_QUERY_WINDOW_MS = 15 * 60 * 1000;
+
+/** Email di contatto per privacy e richieste di cancellazione (obbligatoria per App Store e Play Store) */
+export const CONTACT_EMAIL = 'privacy@siigep.tech';
+
+/** Link agli store: compilali dopo la prima pubblicazione per mostrarli nella landing page */
+export const APP_STORE_URL = '';
+export const PLAY_STORE_URL = '';

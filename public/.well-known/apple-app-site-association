@@ -1,0 +1,13 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["TEAMID.tech.siigep.socialparking"],
+        "components": [
+          { "/": "/come-funziona/*", "comment": "Link d'invito" },
+          { "/": "/", "?": { "ref": "?*" }, "comment": "Link con codice invito" }
+        ]
+      }
+    ]
+  }
+}

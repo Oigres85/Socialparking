@@ -1,5 +1,5 @@
 import { getAnalytics, logEvent, isSupported } from 'firebase/analytics';
-import { app } from '@/firebase/config';
+import { getFirebaseApp } from '@/firebase/config';
 
 /**
  * @fileOverview Utility per il tracciamento degli eventi con Firebase Analytics.
@@ -13,7 +13,7 @@ async function getAnalyticsInstance() {
   
   const supported = await isSupported();
   if (supported) {
-    analyticsInstance = getAnalytics(app);
+    analyticsInstance = getAnalytics(getFirebaseApp());
   }
   return analyticsInstance;
 }
@@ -41,6 +41,9 @@ export const Analytics = {
   searchToggled: (on: boolean) => trackEvent('search_toggled', { enabled: on }),
   notifPermissionGranted: () => trackEvent('notification_permission_granted'),
   notifPermissionDenied: () => trackEvent('notification_permission_denied'),
-  shareTriggered: (context: 'freed' | 'found') => trackEvent('share_triggered', { context }),
+  shareTriggered: (context: 'freed' | 'found' | 'invite' | 'card') => trackEvent('share_triggered', { context }),
   pwaInstalled: () => trackEvent('pwa_installed'),
+  returnToCarDetected: () => trackEvent('return_to_car_detected'),
+  profileOpened: () => trackEvent('profile_opened'),
+  landingCta: (source: string) => trackEvent('landing_cta', { source }),
 };

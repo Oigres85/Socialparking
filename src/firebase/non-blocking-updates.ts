@@ -77,3 +77,11 @@ export function deleteDocumentNonBlocking(
     errorEmitter.emit('permission-error', permissionError);
   });
 }
+
+/**
+ * Scrive sul documento dell'utente creandolo se non esiste (setDoc + merge).
+ * updateDoc fallirebbe sul primo accesso perché nessuno crea il documento users/{uid}.
+ */
+export function mergeUserDoc(firestore: Firestore, uid: string, data: Record<string, unknown>) {
+  setDocumentNonBlocking(firestore, `users/${uid}`, data, { merge: true });
+}

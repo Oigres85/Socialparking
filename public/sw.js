@@ -10,8 +10,6 @@
  * 4. Icone PNG valide nel manifest.json (non SVG)
  */
 
-const VAPID_PUBLIC_KEY = 'BEnWY3lE5VFAD-dZC0EXppMFwWLcspOcFW9tOYCXzfVATjkd8YH5gkT2a4lO4tYkYLKLiXKKnTrh5G5j1lV_lnI';
-
 self.addEventListener('install', (event) => {
   // Attivazione immediata senza attendere la chiusura delle tab esistenti
   self.skipWaiting();

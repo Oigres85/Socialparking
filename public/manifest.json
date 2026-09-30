@@ -1,7 +1,8 @@
 {
+  "id": "/",
   "name": "Social Parking",
   "short_name": "Social Parking",
-  "description": "Trova e condividi parcheggi in tempo reale. Gratuito, anonimo, immediato.",
+  "description": "Chi lascia il parcheggio avvisa chi lo cerca. Gratuito, anonimo, immediato.",
   "icons": [
     {
       "src": "/icon-192.png",
@@ -13,14 +14,31 @@
       "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "maskable"
     }
   ],
   "start_url": "/?source=pwa",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#000000",
   "orientation": "portrait",
-  "categories": ["navigation", "utilities"],
-  "lang": "it"
+  "categories": [
+    "navigation",
+    "travel",
+    "utilities"
+  ],
+  "lang": "it",
+  "related_applications": [
+    {
+      "platform": "play",
+      "id": "tech.siigep.socialparking"
+    }
+  ]
 }

@@ -1,58 +1,93 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { Geolocation } from '@capacitor/geolocation';
 import { GPS_UPDATE_THRESHOLD_M } from '@/lib/constants';
 import { getHaversineDistance } from '@/lib/utils';
+import { isNative } from '@/lib/platform';
 
 export interface UserLocation {
   latitude: number;
   longitude: number;
   heading: number | null;
+  /** Velocità in m/s (null se il dispositivo non la fornisce) */
+  speed?: number | null;
+  accuracy?: number | null;
+  timestamp?: number;
 }
 
+export type GpsPermission = 'unknown' | 'granted' | 'denied';
+
 /**
- * Hook per la gestione della geolocalizzazione GPS.
- * Gestisce l'aggiornamento della posizione e il throttling basato sulla distanza.
+ * Hook per la geolocalizzazione.
+ * Su app nativa usa il plugin Capacitor (permessi di sistema corretti su iOS/Android),
+ * sul web la Geolocation API del browser. Il callback onLocationUpdate è throttlato per distanza.
  */
 export function useGps(onLocationUpdate?: (loc: UserLocation) => void) {
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
-  const watchId = useRef<number | null>(null);
+  const [permission, setPermission] = useState<GpsPermission>('unknown');
+  const webWatchId = useRef<number | null>(null);
+  const nativeWatchId = useRef<string | null>(null);
   const hasInitialCentered = useRef(false);
   const lastSavedLocation = useRef<UserLocation | null>(null);
+  const callbackRef = useRef(onLocationUpdate);
+  callbackRef.current = onLocationUpdate;
 
-  const startGps = useCallback(() => {
-    if (typeof window === 'undefined' || !navigator.geolocation) return;
-
-    const onSuccess = (pos: GeolocationPosition) => {
-      const { latitude, longitude, heading } = pos.coords;
-      const loc: UserLocation = { latitude, longitude, heading };
-      setUserLocation(loc);
-
-      const dist = lastSavedLocation.current
-        ? getHaversineDistance(loc, lastSavedLocation.current)
-        : Infinity;
-
-      // Aggiorna solo se ci si è spostati di almeno X metri o se è la prima acquisizione
-      if (dist >= GPS_UPDATE_THRESHOLD_M || !lastSavedLocation.current) {
-        lastSavedLocation.current = loc;
-        onLocationUpdate?.(loc);
-      }
+  const handlePosition = useCallback((coords: GeolocationCoordinates | { latitude: number; longitude: number; heading: number | null; speed: number | null; accuracy: number }, ts: number) => {
+    const loc: UserLocation = {
+      latitude: coords.latitude,
+      longitude: coords.longitude,
+      heading: coords.heading ?? null,
+      speed: coords.speed ?? null,
+      accuracy: coords.accuracy ?? null,
+      timestamp: ts,
     };
+    setPermission('granted');
+    setUserLocation(loc);
 
-    const options = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };
-    
-    // Acquisizione iniziale veloce
-    navigator.geolocation.getCurrentPosition(onSuccess, () => {
-      navigator.geolocation.getCurrentPosition(onSuccess, null, { enableHighAccuracy: false });
+    const dist = lastSavedLocation.current ? getHaversineDistance(loc, lastSavedLocation.current) : Infinity;
+    if (dist >= GPS_UPDATE_THRESHOLD_M) {
+      lastSavedLocation.current = loc;
+      callbackRef.current?.(loc);
+    }
+  }, []);
+
+  const startGps = useCallback(async () => {
+    if (typeof window === 'undefined') return;
+
+    if (isNative()) {
+      if (nativeWatchId.current) return;
+      try {
+        const perm = await Geolocation.requestPermissions({ permissions: ['location'] });
+        if (perm.location === 'denied') { setPermission('denied'); return; }
+        nativeWatchId.current = await Geolocation.watchPosition(
+          { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+          (pos, err) => {
+            if (err || !pos) return;
+            handlePosition(pos.coords as any, pos.timestamp);
+          }
+        );
+      } catch {
+        setPermission('denied');
+      }
+      return;
+    }
+
+    if (!navigator.geolocation || webWatchId.current !== null) return;
+    const onError = (err: GeolocationPositionError) => {
+      if (err.code === err.PERMISSION_DENIED) setPermission('denied');
+    };
+    const options = { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 };
+    navigator.geolocation.getCurrentPosition(p => handlePosition(p.coords, p.timestamp), () => {
+      navigator.geolocation.getCurrentPosition(p => handlePosition(p.coords, p.timestamp), onError, { enableHighAccuracy: false });
     }, options);
-
-    // Monitoraggio continuo
-    watchId.current = window.navigator.geolocation.watchPosition(onSuccess, null, options);
-  }, [onLocationUpdate]);
+    webWatchId.current = navigator.geolocation.watchPosition(p => handlePosition(p.coords, p.timestamp), onError, options);
+  }, [handlePosition]);
 
   useEffect(() => {
     return () => {
-      if (watchId.current !== null) navigator.geolocation.clearWatch(watchId.current);
+      if (webWatchId.current !== null) navigator.geolocation.clearWatch(webWatchId.current);
+      if (nativeWatchId.current) Geolocation.clearWatch({ id: nativeWatchId.current }).catch(() => {});
     };
   }, []);
 
-  return { userLocation, startGps, hasInitialCentered };
+  return { userLocation, startGps, hasInitialCentered, permission };
 }

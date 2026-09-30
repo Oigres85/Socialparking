@@ -2,68 +2,104 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Funzioni helper per la sicurezza
     function isSignedIn() {
       return request.auth != null;
     }
 
     function isOwner(userId) {
-      return request.auth.uid == userId;
+      return isSignedIn() && request.auth.uid == userId;
     }
 
-    function isFieldImmutable(field) {
-      return !(field in request.resource.data) || request.resource.data[field] == resource.data[field];
-    }
-    
     function isValidLat(lat) {
-      return lat >= -90 && lat <= 90;
-    }
-    
-    function isValidLon(lon) {
-      return lon >= -180 && lon <= 180;
+      return lat is number && lat >= -90 && lat <= 90;
     }
 
-    // --- COLLECTION USERS ---
+    function isValidLon(lon) {
+      return lon is number && lon >= -180 && lon <= 180;
+    }
+
+    function changedKeys() {
+      return request.resource.data.diff(resource.data).affectedKeys();
+    }
+
+    // Campi che il client può scrivere sul proprio profilo.
+    // Punti, badge, streak e statistiche sono scritti SOLO dalle Cloud Functions (anti-cheat).
+    function clientUserKeys() {
+      return ['latitude', 'longitude', 'lastLocationUpdate', 'isSearching', 'pushSubscription',
+              'fcmToken', 'platform', 'lang', 'referralCode', 'createdAt'];
+    }
+
+    function isValidReferralCode(code) {
+      return code is string && code.matches('^[2-9A-HJ-NP-Z]{6}$');
+    }
+
+    // --- USERS ---
     match /users/{userId} {
       allow get: if isOwner(userId);
-      allow list: if false; // Disabilitato il listing degli utenti per privacy
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId) && isFieldImmutable('id');
+      allow list: if false;
+      allow create: if isOwner(userId) && request.resource.data.keys().hasOnly(clientUserKeys());
+      allow update: if isOwner(userId) && changedKeys().hasOnly(clientUserKeys());
       allow delete: if isOwner(userId);
     }
 
-    // --- COLLECTION PARKINGS ---
+    // --- REFERRALS: codice invito -> uid ---
+    match /referrals/{code} {
+      allow get: if isSignedIn();
+      allow list: if false;
+      allow create: if isSignedIn()
+                    && isValidReferralCode(code)
+                    && request.resource.data.keys().hasOnly(['uid'])
+                    && request.resource.data.uid == request.auth.uid;
+      allow update: if false;
+      allow delete: if isSignedIn() && resource.data.uid == request.auth.uid;
+    }
+
+    // --- REFERRAL CLAIMS: "sono stato invitato da <code>" (una sola volta, elaborato dalla Cloud Function) ---
+    match /referralClaims/{userId} {
+      allow read, update, delete: if false;
+      allow create: if isOwner(userId)
+                    && request.resource.data.keys().hasOnly(['code'])
+                    && isValidReferralCode(request.resource.data.code);
+    }
+
+    // --- PARKINGS ---
     match /parkings/{parkingId} {
       allow get, list: if isSignedIn();
-      
-      // Creazione: status deve essere 'libero' e coordinate valide
-      allow create: if isSignedIn() && 
-                      request.resource.data.userId == request.auth.uid &&
-                      request.resource.data.status == 'libero' &&
-                      isValidLat(request.resource.data.latitude) &&
-                      isValidLon(request.resource.data.longitude);
-      
-      // Update: userId immutabile, owner può solo cambiare stato/timestamp
-      allow update: if isSignedIn() && isFieldImmutable('userId') && (
+
+      allow create: if isSignedIn()
+                    && request.resource.data.keys().hasOnly(['latitude', 'longitude', 'status', 'timestamp', 'userId'])
+                    && request.resource.data.userId == request.auth.uid
+                    && request.resource.data.status == 'libero'
+                    && request.resource.data.timestamp == request.time
+                    && isValidLat(request.resource.data.latitude)
+                    && isValidLon(request.resource.data.longitude);
+
+      allow update: if isSignedIn() && changedKeys().hasOnly(['status', 'reservedById', 'bookingCode']) && (
                       (
-                        isOwner(resource.data.userId) && 
-                        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'timestamp', 'stats'])
-                      ) || 
-                      (
-                        // Logica di Prenotazione
-                        resource.data.status == 'libero' &&
-                        request.resource.data.status == 'in arrivo' &&
-                        request.resource.data.reservedById == request.auth.uid
-                      ) ||
-                      (
-                        // Logica di Cancellazione
-                        resource.data.status == 'in arrivo' &&
-                        isOwner(resource.data.reservedById) &&
-                        request.resource.data.status == 'libero'
+                        // Prenotazione: posto libero, non scaduto, non proprio
+                        resource.data.status == 'libero'
+                        && resource.data.userId != request.auth.uid
+                        && resource.data.timestamp > request.time - duration.value(3, 'm')
+                        && request.resource.data.status == 'in arrivo'
+                        && request.resource.data.reservedById == request.auth.uid
+                        && request.resource.data.bookingCode is string
+                        && request.resource.data.bookingCode.size() == 4
+                      ) || (
+                        // Annullamento da parte di chi ha prenotato
+                        resource.data.status == 'in arrivo'
+                        && resource.data.reservedById == request.auth.uid
+                        && request.resource.data.status == 'libero'
+                        && request.resource.data.reservedById == null
                       )
                     );
-                    
-      allow delete: if resource != null && isOwner(resource.data.userId);
+
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    // --- STATS: contatori pubblici aggregati, scritti solo dalle Cloud Functions ---
+    match /stats/{docId} {
+      allow read: if true;
+      allow write: if false;
     }
   }
 }

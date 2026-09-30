@@ -8,16 +8,19 @@ import {
   DocumentData,
   FirestoreError,
   QuerySnapshot,
+  WhereFilterOp,
 } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { useFirestore } from '@/firebase/provider';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
+export type WhereClause = [string, WhereFilterOp, unknown];
+
 export function useCollection<T>(
   path: string | null,
   options?: {
-    where?: [string, '==', any];
+    where?: WhereClause[];
   }
 ) {
   const firestore = useFirestore();
@@ -25,19 +28,11 @@ export function useCollection<T>(
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<FirestoreError | null>(null);
 
-  const whereCondition = JSON.stringify(options?.where);
+  const whereKey = JSON.stringify(options?.where ?? [], (_k, v) => (v instanceof Date ? v.toISOString() : v));
 
   useEffect(() => {
-    // Wait for the Firebase instance to be ready.
-    // On the server and initial client render, `firestore` will be null.
-    // By returning here, we remain in the initial `loading: true` state,
-    // preventing a hydration mismatch.
-    if (!firestore) {
-      return;
-    }
+    if (!firestore) return;
 
-    // If the path is null, we are explicitly told not to fetch.
-    // In this case, we are not loading and there is no data.
     if (!path) {
       setData(null);
       setLoading(false);
@@ -45,19 +40,17 @@ export function useCollection<T>(
       return;
     }
 
-    // We have a path and firestore, so we are fetching.
     setLoading(true);
 
     let q: Query<DocumentData> = collection(firestore, path);
-    if (options?.where) {
-      q = query(q, where(...options.where));
+    for (const clause of options?.where ?? []) {
+      q = query(q, where(...clause));
     }
 
     const unsubscribe = onSnapshot(
       q,
       (snapshot: QuerySnapshot<DocumentData>) => {
-        const docs = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })) as T[];
-        setData(docs);
+        setData(snapshot.docs.map(d => ({ ...d.data(), id: d.id })) as T[]);
         setLoading(false);
         setError(null);
       },
@@ -65,17 +58,13 @@ export function useCollection<T>(
         setError(err);
         setData(null);
         setLoading(false);
-        const permissionError = new FirestorePermissionError({
-            path: path,
-            operation: 'list',
-        });
-        errorEmitter.emit('permission-error', permissionError);
+        errorEmitter.emit('permission-error', new FirestorePermissionError({ path, operation: 'list' }));
       }
     );
 
     return () => unsubscribe();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [firestore, path, whereCondition]);
+  }, [firestore, path, whereKey]);
 
   return { data, loading, error };
 }

@@ -38,3 +38,8 @@ export function generateBookingCode(length = 4): string {
   crypto.getRandomValues(randomValues);
   return Array.from(randomValues, (val) => chars[val % chars.length]).join('');
 }
+
+/** Data "YYYY-MM-DD" nel fuso orario italiano (usata per le statistiche giornaliere). */
+export function romeDateKey(d: Date = new Date()): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+}

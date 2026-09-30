@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { X, Share, PlusSquare, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Analytics } from "@/lib/analytics";
+import { isNative } from "@/lib/platform";
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: Array<string>;
@@ -19,6 +20,8 @@ export default function InstallPrompt() {
   const [showIosPrompt, setShowIosPrompt] = useState(false);
 
   useEffect(() => {
+    // Nelle app native (App Store / Play Store) l'invito a installare la PWA non ha senso
+    if (isNative()) return;
     const handleBeforeInstallPrompt = (event: Event) => {
       event.preventDefault();
       setInstallPromptEvent(event as BeforeInstallPromptEvent);

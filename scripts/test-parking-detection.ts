@@ -1,128 +1,102 @@
 /**
- * Script di test per validare la logica di rilevamento parcheggio e geofencing
- * Run: npx ts-node scripts/test-parking-detection.ts
+ * Test della macchina a stati di rilevamento parcheggio.
+ * Run: npx tsx scripts/test-parking-detection.ts
  */
+import assert from 'node:assert/strict';
+import { initialParkingState, onLocation, onTick, secondsToParked, ParkingMachineState, ParkingEvent } from '../src/lib/parking-machine';
 
-interface UserLocation {
-  latitude: number;
-  longitude: number;
-  heading: number | null;
+const BASE = { latitude: 40.6824, longitude: 14.7681 }; // Salerno
+const north = (m: number) => ({ latitude: BASE.latitude + m / 111_320, longitude: BASE.longitude });
+
+let passed = 0;
+function test(name: string, fn: () => void) {
+  fn();
+  passed++;
+  console.log(`✅ ${name}`);
 }
 
-// Implementazione semplificata di getHaversineDistance
-function getHaversineDistance(loc1: UserLocation, loc2: UserLocation): number {
-  const R = 6371000; // Raggio terra in metri
-  const φ1 = (loc1.latitude * Math.PI) / 180;
-  const φ2 = (loc2.latitude * Math.PI) / 180;
-  const Δφ = ((loc2.latitude - loc1.latitude) * Math.PI) / 180;
-  const Δλ = ((loc2.longitude - loc1.longitude) * Math.PI) / 180;
-
-  const a =
-    Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-  return R * c;
+function run(steps: Array<[number, { latitude: number; longitude: number; speed?: number | null } | 'tick']>) {
+  let s: ParkingMachineState = initialParkingState;
+  const events: ParkingEvent[] = [];
+  for (const [t, sample] of steps) {
+    const [next, ev] = sample === 'tick' ? onTick(s, t) : onLocation(s, sample, t);
+    s = next;
+    if (ev) events.push(ev);
+  }
+  return { s, events };
 }
 
-// Test 1: Rilevamento parcheggio (90 secondi di stop)
-console.log('🧪 TEST 1: Rilevamento parcheggio (90s di stop)\n');
-
-const startLocation: UserLocation = {
-  latitude: 41.9027835,
-  longitude: 12.4963655,
-  heading: null
-};
-
-const stillLocation: UserLocation = {
-  latitude: 41.9027835 + 0.00001, // ~1 metro a nord
-  longitude: 12.4963655,
-  heading: null
-};
-
-const distance = getHaversineDistance(startLocation, stillLocation);
-console.log(`✓ Distanza tra due posizioni: ${distance.toFixed(2)}m`);
-console.log(`✓ Soglia fermo (STATIONARY_THRESHOLD_M): 20m`);
-console.log(`✓ Risultato: ${distance <= 20 ? '✅ FERMO' : '❌ MOVIMENTO'}\n`);
-
-// Test 2: Geofencing (200m + rientrata <80m)
-console.log('🧪 TEST 2: Geofencing (200m di radius)\n');
-
-const parkingLocation: UserLocation = {
-  latitude: 41.9027835,
-  longitude: 12.4963655,
-  heading: null
-};
-
-const insideGeofenceLocation: UserLocation = {
-  latitude: 41.9027835 + 0.0005, // ~55 metri a nord
-  longitude: 12.4963655,
-  heading: null
-};
-
-const outsideGeofenceLocation: UserLocation = {
-  latitude: 41.9027835 + 0.002, // ~220 metri a nord
-  longitude: 12.4963655,
-  heading: null
-};
-
-const reentryLocation: UserLocation = {
-  latitude: 41.9027835 + 0.0004, // ~45 metri (rientrata a piedi)
-  longitude: 12.4963655,
-  heading: null
-};
-
-const distInsideGeofence = getHaversineDistance(parkingLocation, insideGeofenceLocation);
-const distOutsideGeofence = getHaversineDistance(parkingLocation, outsideGeofenceLocation);
-const distReentry = getHaversineDistance(parkingLocation, reentryLocation);
-
-console.log(`📍 Parcheggio: (${parkingLocation.latitude}, ${parkingLocation.longitude})`);
-console.log(`✓ Raggio geofence: 200m\n`);
-
-console.log(`📍 Dentro geofence (${distInsideGeofence.toFixed(0)}m):`);
-console.log(`   ${distInsideGeofence <= 200 ? '✅ DENTRO' : '❌ FUORI'}\n`);
-
-console.log(`📍 Fuori geofence (${distOutsideGeofence.toFixed(0)}m):`);
-console.log(`   ${distOutsideGeofence <= 200 ? '✅ DENTRO' : '❌ FUORI'}\n`);
-
-console.log(`📍 Rientrata a piedi (${distReentry.toFixed(0)}m):`);
-console.log(`   ${distReentry <= 80 ? '✅ RIENTRATA A PIEDI' : '❌ NO'}\n`);
-
-// Test 3: Timeline di detectionione
-console.log('🧪 TEST 3: Timeline di rilevamento\n');
-
-const timeline = [
-  { time: '00:00s', dist: 0, event: 'Utente arriva al parcheggio' },
-  { time: '15:00s', dist: 5, event: 'Fermo (5m movimento max)' },
-  { time: '30:00s', dist: 3, event: 'Ancora fermo (tolleranza traffico)' },
-  { time: '45:00s', dist: 8, event: 'Ancora fermo' },
-  { time: '60:00s', dist: 2, event: 'Ancora fermo' },
-  { time: '75:00s', dist: 1, event: 'Quasi immobile' },
-  { time: '90:00s', dist: 0, event: '✅ RILEVAMENTO PARCHEGGIO! Pop-up mostrato' },
-  { time: '90:05s', dist: 100, event: '❌ Utente si muove - reset detection' }
-];
-
-console.log('Tempo   | Movimento | Stato');
-console.log('--------|-----------|-------');
-timeline.forEach(({ time, dist, event }) => {
-  const status = time === '90:00s' ? '🎯' : dist > 20 ? '❌' : '✅';
-  console.log(`${time}  | ${dist}m      | ${status} ${event}`);
+test('fermo a casa (mai guidato) → nessun parcheggio rilevato', () => {
+  const { s, events } = run([[0, { ...BASE, speed: 0 }], [60_000, { ...BASE, speed: 0 }], [200_000, 'tick']]);
+  assert.equal(s.phase, 'idle');
+  assert.deepEqual(events, []);
 });
 
-// Test 4: Validazione costanti
-console.log('\n🧪 TEST 4: Validazione costanti\n');
-
-const constants = {
-  ALERT_DURATION_S: 90,
-  STATIONARY_THRESHOLD_M: 20,
-  GEOFENCE_RADIUS_M: 200,
-  REENTRY_THRESHOLD_M: 80,
-  PARKING_EXPIRY_MS: 3 * 60 * 1000, // 3 minuti
-};
-
-console.log('Costanti di configurazione:');
-Object.entries(constants).forEach(([key, value]) => {
-  console.log(`  ✓ ${key}: ${value}`);
+test('guida poi fermo 90s → parked', () => {
+  const { s, events } = run([
+    [0, { ...north(-500), speed: 12 }],
+    [10_000, { ...BASE, speed: 0 }],
+    [60_000, { ...north(3), speed: 0 }],
+    [101_000, 'tick'],
+  ]);
+  assert.equal(s.phase, 'parked');
+  assert.deepEqual(events, ['parked']);
+  assert.ok(s.car && Math.abs(s.car.latitude - BASE.latitude) < 1e-9);
 });
 
-console.log('\n✅ Tutti i test completati!\n');
+test('semaforo (fermo 40s poi riparte) → nessun parcheggio', () => {
+  const { s, events } = run([
+    [0, { ...north(-300), speed: 13 }],
+    [5_000, { ...BASE, speed: 0 }],
+    [45_000, { ...BASE, speed: 0 }],
+    [50_000, { ...north(100), speed: 10 }],
+  ]);
+  assert.equal(s.phase, 'driving');
+  assert.deepEqual(events, []);
+});
+
+test('parcheggio → a piedi lontano → ritorno all\'auto → evento returning', () => {
+  const { s, events } = run([
+    [0, { ...north(-500), speed: 12 }],
+    [10_000, { ...BASE, speed: 0 }],
+    [101_000, 'tick'],
+    [400_000, { ...north(250), speed: 1.2 }],
+    [3_600_000, { ...north(40), speed: 1.3 }],
+  ]);
+  assert.equal(s.phase, 'returning');
+  assert.deepEqual(events, ['parked', 'returning']);
+});
+
+test('ritorno e ripartenza in auto → drove-away e auto dimenticata', () => {
+  const { s, events } = run([
+    [0, { ...north(-500), speed: 12 }],
+    [10_000, { ...BASE, speed: 0 }],
+    [101_000, 'tick'],
+    [400_000, { ...north(250), speed: 1 }],
+    [3_600_000, { ...north(20), speed: 1 }],
+    [3_700_000, { ...north(150), speed: 9 }],
+  ]);
+  assert.equal(s.phase, 'driving');
+  assert.equal(s.car, null);
+  assert.deepEqual(events, ['parked', 'returning', 'drove-away']);
+});
+
+test('velocità stimata dalle posizioni se il GPS non la fornisce', () => {
+  const { s } = run([
+    [0, { ...north(0), speed: null }],
+    [10_000, { ...north(150), speed: null }], // 15 m/s
+  ]);
+  assert.equal(s.phase, 'driving');
+});
+
+test('campioni GPS imprecisi vengono ignorati', () => {
+  const [s] = onLocation(initialParkingState, { ...BASE, speed: 20, accuracy: 500 }, 0);
+  assert.equal(s.phase, 'idle');
+});
+
+test('countdown per la UI', () => {
+  const [s] = onLocation({ ...initialParkingState, phase: 'driving' }, { ...BASE, speed: 0 }, 0);
+  assert.equal(secondsToParked(s, 30_000), 60);
+});
+
+console.log(`\n${passed} test superati`);

@@ -1,101 +1,69 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { UserLocation } from './use-gps';
-import { getHaversineDistance } from '@/lib/utils';
+import {
+  ParkingMachineState,
+  ParkingEvent,
+  initialParkingState,
+  onLocation,
+  onTick,
+} from '@/lib/parking-machine';
 
-interface ParkingDetectionState {
-  isParkingDetected: boolean;
-  parkingLocation: UserLocation | null;
-  timeRemainingForAlert: number; // in secondi, 0-90
+const STORAGE_KEY = 'sp-parking-state';
+
+function load(): ParkingMachineState {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return { ...initialParkingState, ...JSON.parse(raw), prev: null };
+  } catch { /* storage non disponibile */ }
+  return initialParkingState;
 }
 
 /**
- * Hook per il rilevamento automatico del parcheggio.
- * Rileva quando l'utente è fermo per 90 secondi (con tolleranza per semafori/traffico).
- * Considera fermo se la distanza dal punto di partenza è < 20 metri per almeno 90 secondi consecutivi.
+ * Hook che collega la macchina a stati del parcheggio al GPS.
+ * Lo stato (posizione dell'auto) sopravvive alla chiusura dell'app.
  */
-export function useParkingDetection(userLocation: UserLocation | null) {
-  const [state, setState] = useState<ParkingDetectionState>({
-    isParkingDetected: false,
-    parkingLocation: null,
-    timeRemainingForAlert: 90
-  });
+export function useParkingDetection(userLocation: UserLocation | null, onEvent?: (e: Exclude<ParkingEvent, null>) => void) {
+  const [state, setState] = useState<ParkingMachineState>(initialParkingState);
+  const stateRef = useRef(state);
+  const onEventRef = useRef(onEvent);
+  onEventRef.current = onEvent;
 
-  const stationaryStartTime = useRef<number | null>(null);
-  const stationaryLocation = useRef<UserLocation | null>(null);
-  const countdownInterval = useRef<NodeJS.Timeout | null>(null);
-  const checkInterval = useRef<NodeJS.Timeout | null>(null);
-
-  const STATIONARY_THRESHOLD_M = 20; // 20 metri = fermo
-  const ALERT_DURATION_S = 90; // 90 secondi
-
-  const resetParking = useCallback(() => {
-    setState({
-      isParkingDetected: false,
-      parkingLocation: null,
-      timeRemainingForAlert: 90
-    });
-    stationaryStartTime.current = null;
-    stationaryLocation.current = null;
-    if (countdownInterval.current) clearInterval(countdownInterval.current);
-    if (checkInterval.current) clearInterval(checkInterval.current);
+  const apply = useCallback((next: ParkingMachineState, event: ParkingEvent) => {
+    stateRef.current = next;
+    setState(next);
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ phase: next.phase, car: next.car, anchor: next.anchor })); } catch { /* ignore */ }
+    if (event) onEventRef.current?.(event);
   }, []);
 
   useEffect(() => {
-    if (!userLocation) {
-      resetParking();
-      return;
-    }
+    const loaded = load();
+    stateRef.current = loaded;
+    setState(loaded);
+  }, []);
 
-    // Controlla ogni 2 secondi se l'utente è fermo
-    checkInterval.current = setInterval(() => {
-      if (!stationaryLocation.current) {
-        // Inizio conteggio
-        stationaryLocation.current = userLocation;
-        stationaryStartTime.current = Date.now();
-        return;
-      }
+  useEffect(() => {
+    if (!userLocation) return;
+    const [next, event] = onLocation(stateRef.current, userLocation, Date.now());
+    apply(next, event);
+  }, [userLocation, apply]);
 
-      const distance = getHaversineDistance(userLocation, stationaryLocation.current);
+  useEffect(() => {
+    const id = setInterval(() => {
+      const [next, event] = onTick(stateRef.current, Date.now());
+      if (next !== stateRef.current) apply(next, event);
+    }, 5000);
+    return () => clearInterval(id);
+  }, [apply]);
 
-      if (distance > STATIONARY_THRESHOLD_M) {
-        // Utente si è mosso, reset
-        resetParking();
-        return;
-      }
+  /** L'utente dichiara di aver parcheggiato qui (utile se il rilevamento automatico non è scattato). */
+  const markParkedHere = useCallback(() => {
+    if (!userLocation) return;
+    apply({ ...stateRef.current, phase: 'parked', anchor: null, car: { latitude: userLocation.latitude, longitude: userLocation.longitude, parkedAt: Date.now() } }, null);
+  }, [userLocation, apply]);
 
-      // Utente è fermo, controlla tempo
-      const elapsedS = (Date.now() - (stationaryStartTime.current || Date.now())) / 1000;
+  const resetParking = useCallback(() => {
+    apply({ ...initialParkingState }, null);
+  }, [apply]);
 
-      if (elapsedS >= ALERT_DURATION_S && !state.isParkingDetected) {
-        // Parcheggio rilevato!
-        setState({
-          isParkingDetected: true,
-          parkingLocation: userLocation,
-          timeRemainingForAlert: 0
-        });
-
-        if (countdownInterval.current) clearInterval(countdownInterval.current);
-        if (checkInterval.current) clearInterval(checkInterval.current);
-      }
-    }, 2000); // Controlla ogni 2 secondi
-
-    // Countdown per il timer (90s -> 0)
-    if (!state.isParkingDetected && stationaryStartTime.current) {
-      countdownInterval.current = setInterval(() => {
-        const elapsedS = (Date.now() - (stationaryStartTime.current || Date.now())) / 1000;
-        const remaining = Math.max(0, ALERT_DURATION_S - elapsedS);
-        setState(prev => ({
-          ...prev,
-          timeRemainingForAlert: remaining
-        }));
-      }, 1000);
-    }
-
-    return () => {
-      if (checkInterval.current) clearInterval(checkInterval.current);
-      if (countdownInterval.current) clearInterval(countdownInterval.current);
-    };
-  }, [userLocation, state.isParkingDetected, resetParking]);
-
-  return { ...state, resetParking };
+  return { phase: state.phase, car: state.car, markParkedHere, resetParking };
 }
