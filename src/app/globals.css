@@ -2,16 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Nasconde completamente i contenitori e i loghi di Mapbox per un look pulito */
+/* Controlli Mapbox discreti: logo e attribuzione restano visibili (obbligatori per i termini Mapbox) */
 .mapboxgl-ctrl-bottom-left,
-.mapboxgl-ctrl-bottom-right,
-.mapboxgl-ctrl-logo, 
-.mapboxgl-ctrl-attrib {
-  display: none !important;
+.mapboxgl-ctrl-bottom-right {
+  margin-bottom: env(safe-area-inset-bottom);
+  opacity: 0.6;
 }
 
 .mapboxgl-ctrl-compass {
   display: none;
+}
+
+html, body {
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+  background: #000;
 }
 
 @layer base {

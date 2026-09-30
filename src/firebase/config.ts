@@ -1,7 +1,8 @@
-import { initializeApp, getApps } from 'firebase/app';
+import { initializeApp, getApps, getApp } from 'firebase/app';
 
 /**
- * @fileOverview Configurazione Firebase e chiavi VAPID per notifiche push.
+ * @fileOverview Configurazione Firebase e chiave pubblica VAPID per le notifiche push web.
+ * Questi valori sono pubblici per design: la sicurezza è garantita da firestore.rules.
  */
 
 export const firebaseConfig = {
@@ -13,8 +14,7 @@ export const firebaseConfig = {
   appId: "1:898470092455:web:8a65404f01381d2d660582"
 };
 
-// Chiave VAPID URL-Safe per la sottoscrizione push fornita dall'utente
+// Chiave VAPID pubblica (la privata vive solo nel secret VAPID_PRIVATE_KEY delle Cloud Functions)
 export const VAPID_PUBLIC_KEY = "BBrXf7IR6V3uDqZ8mrHOTYMTYSa_3w4fcnCF3arkcsW2ae8docYjP23mhEzlhg5hFMbB8LEt2UBhVztUh_6Sc04";
 
-// Esporta l'istanza dell'app per l'uso globale (es. Analytics)
-export const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+export const getFirebaseApp = () => (getApps().length === 0 ? initializeApp(firebaseConfig) : getApp());

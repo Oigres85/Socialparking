@@ -8,15 +8,29 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useDoc } from '@/firebase/firestore/use-doc';
+import { capturePendingReferral } from '@/lib/referral';
+import { Analytics } from '@/lib/analytics';
+import { APP_STORE_URL, PLAY_STORE_URL } from '@/lib/constants';
 
 export default function ComeFunziona() {
   const router = useRouter();
   const [isMobile, setIsMobile] = useState(false);
+  const [os, setOs] = useState<'ios' | 'android' | 'other'>('other');
+  const [refCode, setRefCode] = useState<string | null>(null);
+  // Contatore reale (aggiornato dalle Cloud Functions), niente numeri inventati
+  const { data: globalStats } = useDoc<any>('stats/global');
+  const totalFreed: number = globalStats?.freed ?? 0;
 
   useEffect(() => {
     const ua = window.navigator.userAgent;
     setIsMobile(/iPhone|iPad|iPod|Android/i.test(ua));
+    setOs(/iPhone|iPad|iPod/i.test(ua) ? 'ios' : /Android/i.test(ua) ? 'android' : 'other');
+    capturePendingReferral();
+    setRefCode(new URLSearchParams(window.location.search).get('ref'));
   }, []);
+
+  const storeUrl = os === 'ios' ? APP_STORE_URL : os === 'android' ? PLAY_STORE_URL : '';
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center font-sans selection:bg-blue-500/30 overflow-x-hidden">
@@ -26,15 +40,22 @@ export default function ComeFunziona() {
 
       {/* Hero Section */}
       <header className="relative w-full max-w-xl px-6 pt-16 pb-12 flex flex-col items-center text-center animate-in fade-in slide-in-from-top-8 duration-1000">
-        <div className="inline-flex items-center gap-2 bg-blue-600/10 border border-blue-500/20 px-4 py-2 rounded-full mb-8">
-          <span className="relative flex h-3 w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
-          </span>
-          <span className="text-blue-400 font-black text-[10px] uppercase tracking-widest">
-            1.247 parcheggi liberati questa settimana
-          </span>
-        </div>
+        {refCode && (
+          <div className="mb-6 bg-orange-500/10 border border-orange-400/30 px-4 py-2 rounded-full">
+            <span className="text-orange-300 font-black text-[11px] uppercase tracking-widest">🎁 Sei stato invitato · punti bonus all&apos;iscrizione</span>
+          </div>
+        )}
+        {totalFreed > 0 && (
+          <div className="inline-flex items-center gap-2 bg-blue-600/10 border border-blue-500/20 px-4 py-2 rounded-full mb-8">
+            <span className="relative flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+            </span>
+            <span className="text-blue-400 font-black text-[10px] uppercase tracking-widest">
+              {totalFreed.toLocaleString('it-IT')} parcheggi condivisi dalla community
+            </span>
+          </div>
+        )}
 
         <div className="relative mb-8">
           <div className="absolute inset-0 bg-blue-600 blur-3xl opacity-20 rounded-full" />
@@ -102,20 +123,29 @@ export default function ComeFunziona() {
             <p className="text-[9px] font-black text-white/30 uppercase tracking-widest">Costo</p>
           </div>
           <div className="text-center border-x border-white/10 px-2">
-            <p className="text-xl font-black text-white">&lt; 60s</p>
-            <p className="text-[9px] font-black text-white/30 uppercase tracking-widest">Tempo Medio</p>
+            <p className="text-xl font-black text-white">0</p>
+            <p className="text-[9px] font-black text-white/30 uppercase tracking-widest">Registrazioni</p>
           </div>
           <div className="text-center">
-            <p className="text-xl font-black text-white">PWA</p>
-            <p className="text-[9px] font-black text-white/30 uppercase tracking-widest">iOS & Android</p>
+            <p className="text-xl font-black text-white">iOS</p>
+            <p className="text-[9px] font-black text-white/30 uppercase tracking-widest">& Android</p>
           </div>
         </div>
       </section>
 
       {/* Footer CTA */}
       <div className="w-full max-w-xs pb-16 flex flex-col items-center mt-auto">
+        {storeUrl && (
+          <a
+            href={storeUrl}
+            onClick={() => Analytics.landingCta('store').catch(() => {})}
+            className="w-full bg-blue-600 text-white font-black text-lg h-16 rounded-full flex items-center justify-center hover:bg-blue-700 active:scale-95 transition-all uppercase tracking-widest mb-4"
+          >
+            {os === 'ios' ? ' Scarica su App Store' : '▶ Scarica su Google Play'}
+          </a>
+        )}
         <button
-          onClick={() => router.push('/')}
+          onClick={() => { Analytics.landingCta('web').catch(() => {}); router.push('/'); }}
           className="w-full bg-white text-black font-black text-xl h-16 rounded-full shadow-[0_20px_40px_rgba(255,255,255,0.15)] hover:bg-white/90 active:scale-95 transition-all uppercase tracking-widest mb-4"
         >
           APRI LA MAPPA →
@@ -124,7 +154,7 @@ export default function ComeFunziona() {
           Nessuna registrazione. Funziona subito.
         </p>
 
-        {isMobile && (
+        {isMobile && !storeUrl && (
           <div className="bg-orange-500/10 border border-orange-500/20 p-4 rounded-2xl flex items-center gap-3 animate-pulse">
             <span className="text-2xl">📲</span>
             <p className="text-[10px] text-orange-400 font-black uppercase leading-tight tracking-wide">
@@ -134,9 +164,14 @@ export default function ComeFunziona() {
           </div>
         )}
 
-        <footer className="mt-12 text-center">
+        <footer className="mt-12 text-center space-y-3">
           <p className="text-[10px] text-white/20 font-black uppercase tracking-[0.3em]">
             Gratuito · Anonimo · Immediato
+          </p>
+          <p className="text-[10px] text-white/30 font-bold space-x-4">
+            <a href="/privacy/" className="hover:text-white">Privacy</a>
+            <a href="/termini/" className="hover:text-white">Termini</a>
+            <a href="/elimina-dati/" className="hover:text-white">Eliminazione dati</a>
           </p>
         </footer>
       </div>

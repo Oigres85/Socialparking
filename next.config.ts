@@ -1,45 +1,18 @@
 import type { NextConfig } from 'next';
 
 /**
- * Configurazione ottimizzata per Next.js 15 e Firebase App Hosting.
- * Include la transpilazione per Mapbox e Firebase per prevenire errori di runtime.
+ * Export statico: la stessa build (cartella out/) serve
+ *  - il sito/PWA su Firebase Hosting
+ *  - le app native iOS/Android tramite Capacitor (webDir: out)
+ * Tutta la logica server (notifiche, punti, statistiche) vive nelle Cloud Functions (functions/).
  */
 const nextConfig: NextConfig = {
-  typescript: {
-    tsconfigPath: './tsconfig.json',
-    ignoreBuildErrors: true,
-  },
+  output: 'export',
+  trailingSlash: true,
   images: {
     unoptimized: true,
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'placehold.co',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'picsum.photos',
-        port: '',
-        pathname: '/**',
-      },
-    ],
   },
-  // Transpilazione necessaria per i moduli Firebase, Mapbox e icone
-  transpilePackages: [
-    'firebase',
-    '@firebase',
-    'lucide-react',
-    'react-map-gl',
-    'mapbox-gl'
-  ],
+  transpilePackages: ['lucide-react', 'react-map-gl', 'mapbox-gl'],
 };
 
 export default nextConfig;

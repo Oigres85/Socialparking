@@ -43,3 +43,19 @@ next-env.d.ts
 # firebase
 firebase-debug.log
 firestore-debug.log
+# firebase deploy cache
+.firebase/
+functions/lib/
+functions/node_modules/
+
+# capacitor / native build outputs
+android/app/build/
+android/.gradle/
+android/build/
+ios/App/build/
+ios/App/Pods/
+ios/DerivedData/
+*.keystore
+*.jks
+!.env.example
+android/keystore.properties
